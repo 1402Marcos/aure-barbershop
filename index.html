@@ -1,0 +1,2346 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, viewport-fit=cover">
+<title>Aure Barbershop — Contabilidad</title>
+<meta name="theme-color" content="#0e1c22">
+<meta name="description" content="Contabilidad diaria, insumos y caja para Aure Barbershop">
+
+<!-- PWA: si estos archivos no están presentes (ej. abierto como file:// local),
+     el navegador simplemente los ignora y la app sigue funcionando igual. -->
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon-192.png" type="image/png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Aure Barbershop">
+
+<style>
+/* =========================================================
+   AURE BARBERSHOP — Design tokens
+   Concepto: libro de contabilidad de barbería. Negro café
+   (no negro puro), latón/oro como acento principal, rojo
+   apagado de poste de barbería como acento secundario,
+   verde salvia para positivo. Tarjetas estilo "recibo"
+   con borde perforado. Cifras en monoespaciada tabular,
+   como un libro de cuentas.
+   ========================================================= */
+:root, html[data-theme="dark"]{
+  --bg:#0e1c22;
+  --surface:#15272e;
+  --surface-2:#1c343c;
+  --surface-3:#243f47;
+  --border:#2c454d;
+  --gold:#c17a4f;
+  --gold-bright:#e0996b;
+  --red:#a34438;
+  --red-bright:#c65f4f;
+  --green:#4f8f7c;
+  --green-bright:#71b39e;
+  --cream:#eef3f2;
+  --muted:#93a8ab;
+  --muted-2:#5f767a;
+  --radius:10px;
+  --font-display:'Aure Display', Georgia, 'Times New Roman', serif;
+  --font-body:'Aure Body', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-mono:'Aure Mono', 'Courier New', monospace;
+}
+
+html[data-theme="light"]{
+  --bg:#eef3f2;
+  --surface:#ffffff;
+  --surface-2:#e7eeed;
+  --surface-3:#dbe4e3;
+  --border:#cdd8d7;
+  --gold:#a8623a;
+  --gold-bright:#c17a4f;
+  --red:#a13f2f;
+  --red-bright:#b1503f;
+  --green:#3d7a67;
+  --green-bright:#4f8f7c;
+  --cream:#12262c;
+  --muted:#4c6165;
+  --muted-2:#7c9195;
+}
+
+@font-face{
+  font-family:'Aure Display';
+  src:local('Playfair Display');
+}
+
+*{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+html,body{margin:0; padding:0;}
+body{
+  background:var(--bg);
+  color:var(--cream);
+  font-family:var(--font-body);
+  min-height:100vh;
+  min-height:100dvh;
+  -webkit-font-smoothing:antialiased;
+  overscroll-behavior-y:none;
+}
+body::before{
+  /* textura sutil de papel/grano */
+  content:'';
+  position:fixed; inset:0;
+  pointer-events:none;
+  background-image:
+    radial-gradient(circle at 20% 10%, rgba(193,122,79,0.05), transparent 40%),
+    radial-gradient(circle at 80% 90%, rgba(163,68,56,0.04), transparent 45%);
+  z-index:0;
+}
+h1,h2,h3{ font-family:var(--font-display); font-weight:700; margin:0; letter-spacing:0.01em; }
+.num{ font-family:var(--font-mono); font-variant-numeric:tabular-nums; font-feature-settings:"tnum"; }
+button{ font-family:inherit; }
+:focus-visible{ outline:2px solid var(--gold-bright); outline-offset:2px; }
+
+.app{
+  position:relative; z-index:1;
+  max-width:480px; margin:0 auto;
+  min-height:100vh; min-height:100dvh;
+  display:flex; flex-direction:column;
+  padding-bottom:calc(76px + env(safe-area-inset-bottom));
+}
+
+/* ---------- Header ---------- */
+.topbar{
+  padding:22px 20px 16px;
+  display:flex; align-items:center; justify-content:space-between;
+}
+.brand{ display:flex; align-items:center; gap:10px; }
+.brand-mark{
+  width:34px; height:34px; border-radius:50%;
+  background:conic-gradient(from 0deg, var(--red) 0 25%, var(--cream) 25% 50%, var(--gold) 50% 75%, var(--cream) 75% 100%);
+  background-size:cover; background-position:center;
+  border:1px solid var(--border);
+  flex-shrink:0; padding:0; cursor:pointer; position:relative; overflow:hidden;
+}
+.brand-mark::after{
+  content:'✎'; position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
+  background:rgba(10,8,6,.55); color:var(--cream); font-size:12px; opacity:0; transition:opacity .15s;
+}
+.brand-mark:hover::after, .brand-mark:active::after{ opacity:1; }
+.brand-mark.has-logo{ border-color:var(--gold); }
+.brand-text h1{ font-size:19px; color:var(--cream); line-height:1.1;}
+.brand-text span{ display:block; font-size:10.5px; letter-spacing:.14em; text-transform:uppercase; color:var(--gold); margin-top:2px;}
+.theme-toggle{
+  width:38px; height:38px; border-radius:50%; flex-shrink:0;
+  background:var(--surface-2); border:1px solid var(--border); color:var(--cream);
+  font-size:16px; cursor:pointer; display:flex; align-items:center; justify-content:center;
+}
+.theme-seg{ display:flex; gap:6px; flex-shrink:0; }
+.theme-seg button{
+  padding:8px 12px; font-size:12.5px; border-radius:20px; border:1px solid var(--border);
+  background:var(--surface-2); color:var(--muted); cursor:pointer;
+}
+.theme-seg button.active{ background:var(--gold); border-color:var(--gold); color:#221a10; font-weight:700; }
+
+/* ---------- Pantalla de bloqueo (PIN) ---------- */
+.lock-screen{
+  position:fixed; inset:0; z-index:200; background:var(--bg);
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  padding:24px; text-align:center;
+}
+.lock-mark{
+  width:64px; height:64px; border-radius:50%; margin-bottom:16px;
+  background:conic-gradient(from 0deg, var(--red) 0 25%, var(--cream) 25% 50%, var(--gold) 50% 75%, var(--cream) 75% 100%);
+  border:1px solid var(--border); background-size:cover; background-position:center;
+}
+.lock-title{ font-size:20px; color:var(--cream); margin-bottom:4px; }
+.lock-subtitle{ font-size:13px; color:var(--muted); margin:0 0 22px; }
+.lock-dots{ display:flex; gap:14px; margin-bottom:30px; }
+.lock-dot{
+  width:14px; height:14px; border-radius:50%; border:1.5px solid var(--muted-2); background:transparent; transition:all .15s;
+}
+.lock-dot.filled{ background:var(--gold); border-color:var(--gold); }
+.lock-dot.error{ background:var(--red-bright); border-color:var(--red-bright); }
+.lock-pad{
+  display:grid; grid-template-columns:repeat(3, 68px); gap:14px; justify-content:center;
+}
+.lock-pad button{
+  width:68px; height:68px; border-radius:50%; border:1px solid var(--border);
+  background:var(--surface-2); color:var(--cream); font-size:22px; cursor:pointer;
+}
+.lock-pad button:active{ background:var(--surface-3); }
+.lock-shake{ animation:shake .3s; }
+@keyframes shake{ 10%,90%{transform:translateX(-3px);} 20%,80%{transform:translateX(5px);} 30%,50%,70%{transform:translateX(-8px);} 40%,60%{transform:translateX(8px);} }
+.header-stripe{
+  height:3px; margin:0 20px 4px;
+  background:repeating-linear-gradient(135deg, var(--red) 0 10px, var(--cream) 10px 20px, var(--gold) 20px 30px, var(--cream) 30px 40px);
+  border-radius:2px; opacity:.85;
+}
+
+/* ---------- Views ---------- */
+.view{ padding:14px 20px 24px; display:none; flex:1; animation:fadein .18s ease; }
+.view.active{ display:block; }
+@keyframes fadein{ from{opacity:0; transform:translateY(4px);} to{opacity:1; transform:translateY(0);} }
+
+.section-title{
+  display:flex; align-items:baseline; justify-content:space-between;
+  margin:22px 0 10px;
+}
+.section-title h2{ font-size:15px; color:var(--muted); text-transform:uppercase; letter-spacing:.09em; font-family:var(--font-body); font-weight:600;}
+.section-title .link{ font-size:13px; color:var(--gold); background:none; border:none; cursor:pointer; padding:4px; }
+
+/* ---------- Receipt card (elemento firma) ---------- */
+.receipt{
+  position:relative;
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:2px;
+  padding:18px 18px 16px;
+  margin-bottom:14px;
+}
+.receipt::before{
+  content:'';
+  position:absolute; top:-1px; left:0; right:0; height:9px;
+  background-image:radial-gradient(circle, var(--bg) 5px, transparent 5.5px);
+  background-size:16px 10px;
+  background-position:top center;
+  background-repeat:repeat-x;
+}
+.receipt.tone-gold{ border-color:rgba(193,122,79,.35); }
+
+/* Dashboard hero totals */
+.totals-card{
+  position:relative;
+  background:linear-gradient(160deg, var(--surface-2), var(--surface));
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  padding:20px;
+  margin-bottom:16px;
+}
+.totals-tabs{ display:flex; gap:6px; margin-bottom:14px; }
+.totals-tabs button{
+  flex:1; padding:7px 4px; font-size:12px; border-radius:20px;
+  border:1px solid var(--border); background:transparent; color:var(--muted);
+  cursor:pointer; transition:all .15s;
+}
+.totals-tabs button.active{ background:var(--gold); border-color:var(--gold); color:#221a10; font-weight:700;}
+.totals-grid{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+.totals-grid .full{ grid-column:1/-1; }
+.stat-label{ font-size:11px; text-transform:uppercase; letter-spacing:.08em; color:var(--muted-2); margin-bottom:4px;}
+.stat-value{ font-size:22px; font-weight:700; }
+.stat-value.income{ color:var(--green-bright); }
+.stat-value.expense{ color:var(--red-bright); }
+.stat-value.profit{ font-size:28px; color:var(--gold-bright); }
+.stat-value.margin{ font-size:20px; color:var(--green-bright); }
+.divider-dashed{ border:none; border-top:1px dashed var(--border); margin:14px 0; }
+
+.badge-top-service{
+  display:flex; align-items:center; gap:10px;
+  background:var(--surface-2); border:1px solid var(--border);
+  border-radius:var(--radius); padding:12px 14px; margin-bottom:14px;
+}
+.badge-top-service .icon{ font-size:20px; }
+.badge-top-service .lbl{ font-size:11px; color:var(--muted-2); text-transform:uppercase; letter-spacing:.07em;}
+.badge-top-service .val{ font-size:15px; font-weight:700; color:var(--gold-bright); font-family:var(--font-display); }
+
+/* Chart */
+.chart-wrap{
+  background:var(--surface); border:1px solid var(--border); border-radius:var(--radius);
+  padding:16px 14px 10px; margin-bottom:14px;
+}
+.chart-legend{ display:flex; gap:16px; font-size:11.5px; color:var(--muted); margin-top:8px; padding-left:2px;}
+.chart-legend span{ display:inline-flex; align-items:center; gap:5px;}
+.dot{ width:8px; height:8px; border-radius:50%; display:inline-block;}
+.dot.income{ background:var(--green-bright);}
+.dot.expense{ background:var(--red-bright);}
+
+/* Transaction row (historial) */
+.tx-row{
+  display:flex; align-items:center; gap:12px;
+  padding:12px 0; border-bottom:1px dashed var(--border);
+}
+.tx-row:last-child{ border-bottom:none; }
+.tx-icon{
+  width:36px; height:36px; border-radius:50%; flex-shrink:0;
+  display:flex; align-items:center; justify-content:center; font-size:16px;
+}
+.tx-icon.income{ background:rgba(79,143,124,.18); color:var(--green-bright); }
+.tx-icon.expense{ background:rgba(163,68,56,.2); color:var(--red-bright); }
+.tx-body{ flex:1; min-width:0; }
+.tx-title{ font-size:14.5px; font-weight:600; color:var(--cream); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+.tx-meta{ font-size:11.5px; color:var(--muted-2); margin-top:2px; }
+.tx-amount{ font-size:15px; font-weight:700; white-space:nowrap;}
+.tx-amount.income{ color:var(--green-bright);}
+.tx-amount.expense{ color:var(--red-bright);}
+.tx-del{
+  background:none; border:none; color:var(--muted-2); font-size:16px; cursor:pointer; padding:6px;
+}
+.tx-del:hover{ color:var(--red-bright); }
+
+.empty-state{
+  text-align:center; padding:36px 20px; color:var(--muted-2);
+}
+.empty-state .glyph{ font-size:30px; margin-bottom:8px; opacity:.6;}
+.empty-state p{ font-size:13.5px; margin:0; }
+
+/* Filters */
+.filter-row{ display:flex; gap:8px; margin-bottom:14px; flex-wrap:wrap;}
+.chip{
+  padding:6px 13px; font-size:12.5px; border-radius:20px;
+  border:1px solid var(--border); background:var(--surface); color:var(--muted);
+  cursor:pointer;
+}
+.chip.active{ background:var(--gold); color:#221a10; border-color:var(--gold); font-weight:700;}
+
+/* ---------- Forms ---------- */
+.form-group{ margin-bottom:16px; }
+.form-group label{ display:block; font-size:12px; color:var(--muted); text-transform:uppercase; letter-spacing:.06em; margin-bottom:6px;}
+.form-control{
+  width:100%; padding:13px 14px; border-radius:8px;
+  background:var(--surface-2); border:1px solid var(--border); color:var(--cream);
+  font-size:15px; font-family:var(--font-body);
+}
+.form-control:focus{ border-color:var(--gold); }
+select.form-control{ appearance:none; -webkit-appearance:none; background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='14' height='9'><path d='M1 1l6 6 6-6' stroke='%23a89a86' stroke-width='2' fill='none'/></svg>"); background-repeat:no-repeat; background-position:right 14px center; padding-right:34px;}
+.amount-input-wrap{ position:relative; }
+.amount-input-wrap .currency{ position:absolute; left:14px; top:50%; transform:translateY(-50%); color:var(--muted); font-family:var(--font-mono); font-size:15px;}
+.amount-input-wrap input{ padding-left:30px; font-family:var(--font-mono); font-size:17px;}
+.pay-method-group{ display:flex; gap:8px; }
+.pay-method-group button{
+  flex:1; padding:11px 6px; border-radius:8px; border:1px solid var(--border);
+  background:var(--surface-2); color:var(--muted); cursor:pointer; font-size:13px;
+}
+.pay-method-group button.active{ background:var(--gold); border-color:var(--gold); color:#221a10; font-weight:700;}
+
+.service-pick{
+  display:grid; grid-template-columns:1fr 1fr; gap:9px;
+}
+.service-pick .svc{
+  padding:12px 10px; border-radius:8px; border:1px solid var(--border); background:var(--surface-2);
+  cursor:pointer; text-align:left;
+}
+.service-pick .svc.active{ border-color:var(--gold); background:rgba(193,122,79,.13); }
+.service-pick .svc .n{ font-size:13.5px; font-weight:600; color:var(--cream); display:block; margin-bottom:3px;}
+.service-pick .svc .p{ font-size:13px; color:var(--gold-bright); font-family:var(--font-mono);}
+
+.btn-primary{
+  width:100%; padding:15px; border-radius:8px; border:none;
+  background:var(--gold); color:#221a10; font-weight:700; font-size:15px; cursor:pointer;
+  margin-top:6px; letter-spacing:.02em;
+}
+.btn-primary:active{ background:var(--gold-bright); }
+.btn-secondary{
+  width:100%; padding:13px; border-radius:8px; border:1px solid var(--border);
+  background:transparent; color:var(--cream); font-size:14px; cursor:pointer; margin-top:8px;
+}
+.btn-danger{ color:var(--red-bright); border-color:rgba(163,68,56,.4); }
+
+/* Servicios (catálogo) */
+.svc-row{
+  display:flex; align-items:center; gap:10px; padding:11px 0; border-bottom:1px dashed var(--border);
+}
+.svc-row:last-child{ border-bottom:none;}
+.svc-row .info{ flex:1; }
+.svc-row .name{ font-size:14.5px; font-weight:600; }
+.svc-row .price{ font-size:13.5px; color:var(--gold-bright); font-family:var(--font-mono); margin-top:2px;}
+.meta-line{ font-size:11.5px; color:var(--muted-2); margin-top:3px; }
+.icon-btn{
+  background:var(--surface-2); border:1px solid var(--border); color:var(--muted);
+  width:32px; height:32px; border-radius:7px; cursor:pointer; font-size:14px;
+}
+
+/* Ajustes */
+.settings-item{
+  display:flex; align-items:center; justify-content:space-between; gap:10px;
+  padding:14px 0; border-bottom:1px dashed var(--border);
+}
+.settings-item:last-child{ border-bottom:none; }
+.settings-item .t{ font-size:14px; font-weight:600; }
+.settings-item .d{ font-size:12px; color:var(--muted-2); margin-top:2px; }
+input[type=file]{ display:none; }
+
+/* Toggle switch */
+.switch{ position:relative; width:44px; height:25px; flex-shrink:0; }
+.switch input{ opacity:0; width:0; height:0; }
+.slider{ position:absolute; cursor:pointer; inset:0; background:var(--surface-3); border:1px solid var(--border); border-radius:20px; transition:.2s;}
+.slider::before{ content:''; position:absolute; height:17px; width:17px; left:3px; top:3px; background:var(--muted); border-radius:50%; transition:.2s;}
+input:checked + .slider{ background:rgba(193,122,79,.35); border-color:var(--gold);}
+input:checked + .slider::before{ transform:translateX(19px); background:var(--gold-bright);}
+
+/* Modal */
+.modal-overlay{
+  position:fixed; inset:0; background:rgba(10,8,6,.72); z-index:50;
+  display:none; align-items:flex-end; justify-content:center;
+}
+.modal-overlay.active{ display:flex; }
+.modal{
+  width:100%; max-width:480px; background:var(--surface); border:1px solid var(--border);
+  border-radius:16px 16px 0 0; padding:22px 20px calc(22px + env(safe-area-inset-bottom));
+  animation:slideup .2s ease;
+}
+@keyframes slideup{ from{transform:translateY(30px); opacity:0;} to{transform:translateY(0); opacity:1;} }
+.modal h3{ font-size:17px; margin-bottom:6px; color:var(--gold-bright);}
+.modal p{ font-size:13.5px; color:var(--muted); line-height:1.5; margin:0 0 16px; }
+.modal-actions{ display:flex; gap:10px; }
+.modal-actions button{ flex:1; }
+
+/* Toast */
+.toast{
+  position:fixed; bottom:calc(90px + env(safe-area-inset-bottom)); left:50%; transform:translateX(-50%) translateY(20px);
+  background:var(--surface-3); border:1px solid var(--gold); color:var(--cream);
+  padding:11px 20px; border-radius:24px; font-size:13.5px; z-index:60;
+  opacity:0; pointer-events:none; transition:all .25s ease;
+  max-width:88%; text-align:center;
+}
+.toast.show{ opacity:1; transform:translateX(-50%) translateY(0); }
+
+/* Banner recordatorio */
+.reminder-banner{
+  margin:0 20px 4px; padding:12px 14px; border-radius:10px;
+  background:rgba(163,68,56,.14); border:1px solid rgba(163,68,56,.4);
+  display:none; align-items:center; gap:10px; font-size:12.5px; color:#e3b7ab;
+}
+.reminder-banner.show{ display:flex; }
+.reminder-banner button{ background:var(--gold); border:none; color:#221a10; font-weight:700; font-size:11.5px; padding:7px 12px; border-radius:16px; cursor:pointer; flex-shrink:0;}
+
+/* ---------- Bottom nav ---------- */
+.bottom-nav{
+  position:fixed; bottom:0; left:0; right:0; z-index:40;
+  max-width:480px; margin:0 auto;
+  background:var(--surface); border-top:1px solid var(--border);
+  padding:8px 6px calc(8px + env(safe-area-inset-bottom));
+  display:flex; justify-content:space-between;
+}
+.nav-btn{
+  flex:1; background:none; border:none; color:var(--muted-2); cursor:pointer;
+  display:flex; flex-direction:column; align-items:center; gap:3px; padding:6px 1px;
+  font-size:9.5px; font-family:var(--font-body); min-width:0;
+}
+.nav-btn .ic{ font-size:17px; line-height:1; }
+.nav-btn.active{ color:var(--gold-bright); }
+.nav-btn.accent .ic{ color:var(--gold-bright); font-weight:700; }
+
+/* Catálogo: sub-tabs, insumos, stock */
+.subtab-panel{ animation:fadein .15s ease; }
+.insumo-row{
+  display:flex; align-items:center; gap:8px; padding:11px 0; border-bottom:1px dashed var(--border);
+}
+.insumo-row:last-child{ border-bottom:none; }
+.insumo-row .info{ flex:1; min-width:0; }
+.insumo-row .name{ font-size:14.5px; font-weight:600; display:flex; align-items:center; gap:6px; flex-wrap:wrap;}
+.insumo-row .meta{ font-size:12px; color:var(--muted-2); margin-top:2px; font-family:var(--font-mono); }
+.stock-badge{
+  font-size:10px; padding:2px 8px; border-radius:10px; font-weight:700;
+  background:rgba(79,143,124,.18); color:var(--green-bright);
+}
+.stock-badge.low{ background:rgba(163,68,56,.22); color:var(--red-bright); }
+.stepper{ display:flex; align-items:center; gap:4px; }
+.stepper button{
+  width:26px; height:26px; border-radius:6px; border:1px solid var(--border); background:var(--surface-2);
+  color:var(--cream); font-size:14px; cursor:pointer; line-height:1;
+}
+.stepper button:active{ background:var(--surface-3); }
+.row-actions{ display:flex; gap:6px; flex-shrink:0; }
+
+@media (max-width:340px){
+  .service-pick{ grid-template-columns:1fr; }
+}
+
+/* =========================================================
+   RESPONSIVE — el sistema completo se adapta a cualquier
+   tamaño de pantalla: celular pequeño, tablet y escritorio.
+   ========================================================= */
+
+/* Tablet: 640px en adelante */
+@media (min-width:640px){
+  .app{ max-width:640px; }
+  .bottom-nav{ max-width:640px; }
+  .totals-card{ padding:26px 28px; }
+  .service-pick{ grid-template-columns:repeat(3, 1fr); }
+  .stat-value.profit{ font-size:32px; }
+  .brand-text h1{ font-size:21px; }
+}
+
+/* Modal como diálogo centrado (no hoja inferior) desde tablet */
+@media (min-width:640px){
+  .modal-overlay{ align-items:center; padding:20px; }
+  .modal{
+    max-width:420px; border-radius:16px;
+    animation:modalpop .18s ease;
+  }
+  @keyframes modalpop{ from{opacity:0; transform:translateY(10px) scale(.98);} to{opacity:1; transform:translateY(0) scale(1);} }
+}
+
+/* Escritorio: 1024px en adelante — navegación lateral fija */
+@media (min-width:1024px){
+  body{ display:flex; }
+  .bottom-nav{
+    position:fixed; top:0; left:0; right:auto; bottom:0;
+    width:112px; height:100vh; height:100dvh;
+    max-width:none; margin:0;
+    flex-direction:column; justify-content:flex-start; align-items:stretch;
+    padding:28px 10px calc(20px + env(safe-area-inset-bottom));
+    gap:6px;
+    border-top:none; border-right:1px solid var(--border);
+  }
+  .nav-btn{
+    flex:none; padding:14px 4px; font-size:11px; border-radius:10px;
+    transition:background .15s;
+  }
+  .nav-btn:hover{ background:var(--surface-2); color:var(--cream); }
+  .nav-btn.active{ background:rgba(193,122,79,.12); }
+  .nav-btn .ic{ font-size:23px; }
+
+  .app{
+    margin:0; margin-left:112px;
+    max-width:820px;
+    padding-bottom:40px;
+    padding-left:8px;
+  }
+  .topbar{ padding-top:32px; }
+  .service-pick{ grid-template-columns:repeat(4, 1fr); }
+  .totals-grid{ max-width:520px; }
+  .chart-wrap{ max-width:640px; }
+}
+
+/* Pantallas muy anchas: limitar el ancho de lectura y centrar visualmente */
+@media (min-width:1400px){
+  .app{ margin-left:auto; margin-right:auto; padding-left:112px; max-width:calc(820px + 112px); }
+}
+</style>
+</head>
+<body>
+
+<div id="lockScreen" class="lock-screen" style="display:none;">
+  <div class="lock-mark" id="lockBrandMark"></div>
+  <h1 class="lock-title">Aure Barbershop</h1>
+  <p class="lock-subtitle" id="lockSubtitle">Ingresa tu PIN</p>
+  <div class="lock-dots" id="lockDots">
+    <span class="lock-dot"></span><span class="lock-dot"></span><span class="lock-dot"></span><span class="lock-dot"></span>
+  </div>
+  <div class="lock-pad" id="lockPad">
+    <button type="button" data-key="1">1</button>
+    <button type="button" data-key="2">2</button>
+    <button type="button" data-key="3">3</button>
+    <button type="button" data-key="4">4</button>
+    <button type="button" data-key="5">5</button>
+    <button type="button" data-key="6">6</button>
+    <button type="button" data-key="7">7</button>
+    <button type="button" data-key="8">8</button>
+    <button type="button" data-key="9">9</button>
+    <span></span>
+    <button type="button" data-key="0">0</button>
+    <button type="button" data-key="back">⌫</button>
+  </div>
+  <button type="button" id="lockCancelBtn" class="btn-secondary" style="margin-top:22px; max-width:200px; display:none;">Cancelar</button>
+</div>
+
+<div class="app">
+
+  <div class="topbar">
+    <div class="brand">
+      <button type="button" class="brand-mark" id="brandMark" title="Toca para cambiar el logo" aria-label="Cambiar logo del negocio"></button>
+      <input type="file" id="logoInput" accept="image/*" hidden>
+      <div class="brand-text">
+        <h1>Aure Barbershop</h1>
+        <span>Libro de cuentas</span>
+      </div>
+    </div>
+    <button type="button" class="theme-toggle" id="themeToggleBtn" title="Cambiar tema" aria-label="Alternar tema claro/oscuro">🌙</button>
+  </div>
+  <div class="header-stripe"></div>
+
+  <div id="reminderBanner" class="reminder-banner">
+    <span id="reminderText">Han pasado varios días desde tu último respaldo.</span>
+    <button id="reminderBackupBtn">Respaldar</button>
+  </div>
+
+  <!-- ================= DASHBOARD ================= -->
+  <section id="view-dashboard" class="view active">
+
+    <div class="totals-card">
+      <div class="totals-tabs">
+        <button class="range-btn active" data-range="day">Hoy</button>
+        <button class="range-btn" data-range="week">Semana</button>
+        <button class="range-btn" data-range="month">Mes</button>
+      </div>
+      <div class="totals-grid">
+        <div>
+          <div class="stat-label">Ingresos</div>
+          <div class="stat-value income num" id="statIncome">$0.00</div>
+        </div>
+        <div>
+          <div class="stat-label">Gastos</div>
+          <div class="stat-value expense num" id="statExpense">$0.00</div>
+        </div>
+        <div class="full">
+          <hr class="divider-dashed">
+          <div class="stat-label">Margen bruto (ventas − costo insumos)</div>
+          <div class="stat-value margin num" id="statMargin">$0.00</div>
+        </div>
+        <div class="full">
+          <hr class="divider-dashed">
+          <div class="stat-label">Ganancia neta</div>
+          <div class="stat-value profit num" id="statProfit">$0.00</div>
+        </div>
+      </div>
+    </div>
+
+    <button type="button" class="btn-secondary" id="closeCashBtn" style="margin-bottom:14px;">🔒 Cerrar caja de hoy</button>
+
+    <div class="badge-top-service" id="topServiceBadge">
+      <div class="icon">✂️</div>
+      <div>
+        <div class="lbl">Servicio más vendido (mes)</div>
+        <div class="val" id="topServiceVal">Aún no hay datos</div>
+      </div>
+    </div>
+
+    <div class="badge-top-service" id="lowStockBadge" style="display:none; border-color:rgba(163,68,56,.4); background:rgba(163,68,56,.1); cursor:pointer;">
+      <div class="icon">⚠️</div>
+      <div>
+        <div class="lbl">Insumos con stock bajo</div>
+        <div class="val" id="lowStockVal" style="color:var(--red-bright);">—</div>
+      </div>
+    </div>
+
+    <div class="chart-wrap">
+      <div class="stat-label" style="margin-bottom:8px;">Últimos 7 días</div>
+      <canvas id="chart7" height="140"></canvas>
+      <div class="chart-legend">
+        <span><i class="dot income"></i>Ingresos</span>
+        <span><i class="dot expense"></i>Gastos</span>
+      </div>
+    </div>
+
+    <div class="section-title">
+      <h2>Movimientos recientes</h2>
+      <button class="link" data-goto="historial">Ver todo</button>
+    </div>
+    <div class="receipt" id="recentList"></div>
+
+  </section>
+
+  <!-- ================= REGISTRAR INGRESO ================= -->
+  <section id="view-ingreso" class="view">
+    <div class="section-title"><h2>Registrar ingreso</h2></div>
+
+    <div class="form-group">
+      <label>Servicio</label>
+      <div class="service-pick" id="servicePick"></div>
+    </div>
+
+    <div class="form-group">
+      <label>Precio</label>
+      <div class="amount-input-wrap">
+        <span class="currency">$</span>
+        <input type="number" step="0.01" min="0" class="form-control" id="incomeAmount" placeholder="0.00">
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label>Método de pago</label>
+      <div class="pay-method-group" id="incomePayGroup">
+        <button data-val="Efectivo" class="active">💵 Efectivo</button>
+        <button data-val="Tarjeta">💳 Tarjeta</button>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label>Fecha y hora</label>
+      <input type="datetime-local" class="form-control" id="incomeDate">
+    </div>
+
+    <div class="form-group">
+      <label>Nota (opcional)</label>
+      <input type="text" class="form-control" id="incomeNote" placeholder="Ej. Cliente frecuente">
+    </div>
+
+    <button class="btn-primary" id="saveIncomeBtn">Guardar ingreso</button>
+  </section>
+
+  <!-- ================= REGISTRAR GASTO ================= -->
+  <section id="view-gasto" class="view">
+    <div class="section-title"><h2>Registrar gasto</h2></div>
+
+    <div class="form-group">
+      <label>Descripción</label>
+      <input type="text" class="form-control" id="expenseDesc" placeholder="Ej. Compra de shampoo">
+    </div>
+
+    <div class="form-group">
+      <label>Monto</label>
+      <div class="amount-input-wrap">
+        <span class="currency">$</span>
+        <input type="number" step="0.01" min="0" class="form-control" id="expenseAmount" placeholder="0.00">
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label>Categoría</label>
+      <select class="form-control" id="expenseCategory"></select>
+    </div>
+
+    <div class="form-group">
+      <label>¿Es compra de un insumo? (opcional)</label>
+      <select class="form-control" id="expenseInsumoLink">
+        <option value="">Ninguno</option>
+      </select>
+    </div>
+
+    <div class="form-group" id="expenseInsumoQtyGroup" style="display:none;">
+      <label>Cantidad comprada <span id="expenseInsumoUnitLbl"></span></label>
+      <input type="number" step="0.01" min="0.01" class="form-control" id="expenseInsumoQty" placeholder="0">
+    </div>
+
+    <div class="form-group">
+      <label>Método de pago</label>
+      <div class="pay-method-group" id="expensePayGroup">
+        <button data-val="Efectivo" class="active">💵 Efectivo</button>
+        <button data-val="Tarjeta">💳 Tarjeta</button>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label>Fecha y hora</label>
+      <input type="datetime-local" class="form-control" id="expenseDate">
+    </div>
+
+    <button class="btn-primary" id="saveExpenseBtn">Guardar gasto</button>
+  </section>
+
+  <!-- ================= HISTORIAL ================= -->
+  <section id="view-historial" class="view">
+    <div class="section-title"><h2>Historial</h2></div>
+
+    <div class="filter-row">
+      <button class="chip active" data-filter="all">Todo</button>
+      <button class="chip" data-filter="income">Ingresos</button>
+      <button class="chip" data-filter="expense">Gastos</button>
+      <button class="chip" data-filter="cierres">🔒 Cierres</button>
+    </div>
+    <div class="form-group" id="historyDateGroup">
+      <input type="date" class="form-control" id="historyDate">
+    </div>
+
+    <div class="receipt" id="historyList"></div>
+  </section>
+
+  <!-- ================= CATÁLOGO (Servicios / Insumos / Categorías) ================= -->
+  <section id="view-catalogo" class="view">
+    <div class="section-title"><h2>Catálogo</h2></div>
+
+    <div class="filter-row">
+      <button class="chip active" data-subtab="servicios">✂️ Servicios</button>
+      <button class="chip" data-subtab="insumos">🧴 Insumos</button>
+      <button class="chip" data-subtab="categorias">🏷️ Categorías</button>
+      <button class="chip" data-subtab="unidades">📏 Unidades</button>
+    </div>
+
+    <!-- Servicios -->
+    <div class="subtab-panel" id="panel-servicios">
+      <div class="section-title" style="margin-top:6px;">
+        <h2>Servicios</h2>
+        <button class="link" id="addServiceBtn">+ Nuevo</button>
+      </div>
+      <div class="receipt" id="serviceList"></div>
+    </div>
+
+    <!-- Insumos -->
+    <div class="subtab-panel" id="panel-insumos" style="display:none;">
+      <div class="section-title" style="margin-top:6px;">
+        <h2>Insumos</h2>
+        <button class="link" id="addInsumoBtn">+ Nuevo</button>
+      </div>
+      <div class="receipt" id="insumoList"></div>
+    </div>
+
+    <!-- Categorías -->
+    <div class="subtab-panel" id="panel-categorias" style="display:none;">
+      <div class="section-title" style="margin-top:6px;">
+        <h2>Categorías de gasto</h2>
+        <button class="link" id="addCategoryBtn">+ Nueva</button>
+      </div>
+      <div class="receipt" id="categoryList"></div>
+    </div>
+
+    <!-- Unidades de medida -->
+    <div class="subtab-panel" id="panel-unidades" style="display:none;">
+      <div class="section-title" style="margin-top:6px;">
+        <h2>Unidades de medida</h2>
+        <button class="link" id="addUnitBtn">+ Nueva</button>
+      </div>
+      <div class="receipt" id="unitList"></div>
+    </div>
+  </section>
+
+  <!-- ================= AJUSTES ================= -->
+  <section id="view-ajustes" class="view">
+    <div class="section-title"><h2>Apariencia</h2></div>
+    <div class="receipt">
+      <div class="settings-item">
+        <div>
+          <div class="t">Tema</div>
+          <div class="d">Elige cómo se ve la app</div>
+        </div>
+        <div class="theme-seg">
+          <button type="button" id="themeSegDark" class="active">🌙 Oscuro</button>
+          <button type="button" id="themeSegLight">☀️ Claro</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="section-title"><h2>Identidad del negocio</h2></div>
+    <div class="receipt">
+      <div class="settings-item">
+        <div>
+          <div class="t">Logo del negocio</div>
+          <div class="d">Se muestra en el círculo junto al nombre</div>
+        </div>
+        <div class="row-actions">
+          <button class="icon-btn" id="changeLogoBtn" aria-label="Cambiar logo">⬆</button>
+          <button class="icon-btn" id="removeLogoBtn" aria-label="Quitar logo">✕</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="section-title"><h2>Respaldo de datos</h2></div>
+    <div class="receipt">
+      <div class="settings-item">
+        <div>
+          <div class="t">Exportar respaldo</div>
+          <div class="d">Descarga un archivo .json con todos tus datos</div>
+        </div>
+        <button class="icon-btn" id="exportBtn">⬇</button>
+      </div>
+      <div class="settings-item">
+        <div>
+          <div class="t">Restaurar respaldo</div>
+          <div class="d">Importa un archivo .json previamente exportado</div>
+        </div>
+        <button class="icon-btn" id="importBtn">⬆</button>
+        <input type="file" id="importFile" accept="application/json">
+      </div>
+      <div class="settings-item">
+        <div>
+          <div class="t">Último respaldo</div>
+          <div class="d" id="lastBackupText">Nunca</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section-title"><h2>Recordatorio automático</h2></div>
+    <div class="receipt">
+      <div class="settings-item">
+        <div>
+          <div class="t">Recordarme respaldar</div>
+          <div class="d">Aviso dentro de la app al abrirla</div>
+        </div>
+        <label class="switch">
+          <input type="checkbox" id="reminderToggle" checked>
+          <span class="slider"></span>
+        </label>
+      </div>
+      <div class="settings-item">
+        <div>
+          <div class="t">Frecuencia</div>
+          <div class="d">Cada cuántos días avisar</div>
+        </div>
+        <select class="form-control" id="reminderDays" style="width:100px;">
+          <option value="3">3 días</option>
+          <option value="7" selected>7 días</option>
+          <option value="15">15 días</option>
+          <option value="30">30 días</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="section-title"><h2>Seguridad</h2></div>
+    <div class="receipt">
+      <div class="settings-item">
+        <div>
+          <div class="t">Bloquear con PIN</div>
+          <div class="d">Pide un PIN de 4 dígitos al abrir la app</div>
+        </div>
+        <label class="switch">
+          <input type="checkbox" id="pinToggle">
+          <span class="slider"></span>
+        </label>
+      </div>
+      <div class="settings-item" id="changePinRow" style="display:none;">
+        <div>
+          <div class="t">Cambiar PIN</div>
+          <div class="d">Actualiza tu código de acceso</div>
+        </div>
+        <button class="icon-btn" id="changePinBtn" aria-label="Cambiar PIN">✎</button>
+      </div>
+      <p style="font-size:11.5px; color:var(--muted-2); margin:8px 0 0;">Si olvidas tu PIN, la única forma de recuperar el acceso es borrar los datos del navegador — lo que también borrará tu información. Guárdalo en un lugar seguro.</p>
+    </div>
+
+    <div class="section-title"><h2>Reportes</h2></div>
+    <div class="receipt">
+      <div class="settings-item">
+        <div>
+          <div class="t">Exportar a Excel (CSV)</div>
+          <div class="d">Descarga ingresos y gastos en una hoja de cálculo</div>
+        </div>
+        <button class="icon-btn" id="exportCsvBtn" aria-label="Exportar CSV">📊</button>
+      </div>
+      <div class="settings-item">
+        <div>
+          <div class="t">Reporte imprimible / PDF</div>
+          <div class="d">Abre un reporte listo para imprimir o guardar como PDF</div>
+        </div>
+        <button class="icon-btn" id="printReportBtn" aria-label="Imprimir reporte">🖨</button>
+      </div>
+    </div>
+
+    <div class="section-title"><h2>Zona de riesgo</h2></div>
+    <div class="receipt">
+      <button class="btn-secondary btn-danger" id="resetBtn">Borrar ingresos y gastos</button>
+      <p style="font-size:11.5px; color:var(--muted-2); margin:8px 0 0;">Tus servicios, insumos y categorías del catálogo no se ven afectados.</p>
+    </div>
+
+    <p style="font-size:11.5px; color:var(--muted-2); text-align:center; margin-top:18px; line-height:1.6;">
+      Aure Barbershop v1.0 · Tus datos se guardan solo en este teléfono.<br>Exporta un respaldo con frecuencia.
+    </p>
+  </section>
+
+</div>
+
+<!-- Bottom navigation -->
+<nav class="bottom-nav">
+  <button class="nav-btn active" data-view="dashboard"><span class="ic">🏠</span>Inicio</button>
+  <button class="nav-btn accent" data-view="ingreso"><span class="ic">＋</span>Ingreso</button>
+  <button class="nav-btn" data-view="gasto"><span class="ic">➖</span>Gasto</button>
+  <button class="nav-btn" data-view="catalogo"><span class="ic">📖</span>Catálogo</button>
+  <button class="nav-btn" data-view="historial"><span class="ic">📜</span>Historial</button>
+  <button class="nav-btn" data-view="ajustes"><span class="ic">⚙️</span>Ajustes</button>
+</nav>
+
+<!-- Modal genérico -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal">
+    <h3 id="modalTitle">Título</h3>
+    <p id="modalBody">Mensaje</p>
+    <div id="modalForm"></div>
+    <div class="modal-actions" id="modalActions">
+      <button class="btn-secondary" id="modalCancel">Cancelar</button>
+      <button class="btn-primary" id="modalConfirm">Aceptar</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ============== ALMACENAMIENTO ============== */
+  const DB_KEYS = {
+    services: 'aure_services',
+    insumos: 'aure_insumos',
+    income: 'aure_income',
+    expenses: 'aure_expenses',
+    categories: 'aure_categories',
+    units: 'aure_units',
+    settings: 'aure_settings',
+    cierres: 'aure_cierres'
+  };
+
+  const DEFAULT_SERVICES = [
+    {id:'s1', name:'Corte clásico', price:5},
+    {id:'s2', name:'Corte + barba', price:8},
+    {id:'s3', name:'Arreglo de barba', price:4},
+    {id:'s4', name:'Corte niño', price:4},
+    {id:'s5', name:'Tinte', price:10},
+    {id:'s6', name:'Diseño / línea', price:3}
+  ];
+  const DEFAULT_INSUMOS = [
+    {id:'i1', name:'Shampoo', unit:'ml', stock:1000, minStock:200, unitCost:0.02},
+    {id:'i2', name:'Cuchillas de afeitar', unit:'Unidad', stock:20, minStock:5, unitCost:0.35},
+    {id:'i3', name:'Toallas', unit:'Unidad', stock:15, minStock:4, unitCost:2.5},
+    {id:'i4', name:'Alcohol / desinfectante', unit:'ml', stock:500, minStock:100, unitCost:0.01}
+  ];
+  const DEFAULT_CATEGORIES = ['Insumos','Renta','Servicios (agua/luz)','Mantenimiento','Publicidad','Otros'];
+  const DEFAULT_UNITS = ['Unidad','ml','Litro','g','Kg','Caja','Paquete'];
+  const DEFAULT_SETTINGS = {
+    reminderOn:true, reminderDays:7, lastBackup:null, installedAt:new Date().toISOString(),
+    theme:'dark', pinEnabled:false, pinHash:null
+  };
+
+  function load(key, fallback){
+    try{
+      const raw = localStorage.getItem(key);
+      if(!raw) return fallback;
+      return JSON.parse(raw);
+    }catch(e){ return fallback; }
+  }
+  function save(key, value){
+    try{ localStorage.setItem(key, JSON.stringify(value)); return true; }
+    catch(e){ toast('No se pudo guardar. Memoria del navegador llena.'); return false; }
+  }
+
+  let services = load(DB_KEYS.services, DEFAULT_SERVICES);
+  let insumos = load(DB_KEYS.insumos, DEFAULT_INSUMOS);
+  let income = load(DB_KEYS.income, []);
+  let expenses = load(DB_KEYS.expenses, []);
+  let categories = load(DB_KEYS.categories, DEFAULT_CATEGORIES);
+  let units = load(DB_KEYS.units, DEFAULT_UNITS);
+  let cierres = load(DB_KEYS.cierres, []);
+  let settings = Object.assign({}, DEFAULT_SETTINGS, load(DB_KEYS.settings, {}));
+  if(!load(DB_KEYS.services,null)) save(DB_KEYS.services, services);
+  if(!load(DB_KEYS.insumos,null)) save(DB_KEYS.insumos, insumos);
+  if(!load(DB_KEYS.categories,null)) save(DB_KEYS.categories, categories);
+  if(!load(DB_KEYS.units,null)) save(DB_KEYS.units, units);
+  if(!load(DB_KEYS.settings,null)) save(DB_KEYS.settings, settings);
+
+  function isDuplicateName(list, name, excludeId, field){
+    field = field || 'name';
+    const norm = (name||'').trim().toLowerCase();
+    return list.some(item=>{
+      const itemName = (typeof item === 'string' ? item : item[field]) || '';
+      const itemId = typeof item === 'string' ? item : item.id;
+      return itemName.trim().toLowerCase() === norm && itemId !== excludeId;
+    });
+  }
+
+  function uid(){ return 'id' + Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
+  function money(n){ return '$' + (Math.round(n*100)/100).toFixed(2); }
+  function todayLocalInput(){
+    const d = new Date();
+    d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
+    return d.toISOString().slice(0,16);
+  }
+  function toast(msg){
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    clearTimeout(t._timer);
+    t._timer = setTimeout(()=>t.classList.remove('show'), 2400);
+  }
+
+  /* ============== NAVEGACIÓN ============== */
+  const views = ['dashboard','ingreso','gasto','historial','catalogo','ajustes'];
+  function goTo(view){
+    views.forEach(v=>{
+      document.getElementById('view-'+v).classList.toggle('active', v===view);
+    });
+    document.querySelectorAll('.nav-btn').forEach(b=>{
+      b.classList.toggle('active', b.dataset.view===view);
+    });
+    if(view==='dashboard') renderDashboard();
+    if(view==='historial') renderHistory();
+    if(view==='catalogo') renderCatalogo();
+    if(view==='ingreso'){ renderServicePick(); document.getElementById('incomeDate').value = todayLocalInput(); }
+    if(view==='gasto'){ renderCategorySelect(); renderExpenseInsumoLink(); document.getElementById('expenseDate').value = todayLocalInput(); }
+    window.scrollTo(0,0);
+  }
+  document.querySelectorAll('.nav-btn').forEach(b=>{
+    b.addEventListener('click', ()=>goTo(b.dataset.view));
+  });
+  document.querySelectorAll('[data-goto]').forEach(b=>{
+    b.addEventListener('click', ()=>goTo(b.dataset.goto));
+  });
+
+  /* ============== MODAL genérico (prompt/confirm) ============== */
+  const modalOverlay = document.getElementById('modalOverlay');
+  function openModal({title, body, formHtml, confirmText, onConfirm, danger}){
+    document.getElementById('modalTitle').textContent = title;
+    document.getElementById('modalBody').textContent = body || '';
+    document.getElementById('modalBody').style.display = body ? 'block' : 'none';
+    document.getElementById('modalForm').innerHTML = formHtml || '';
+    const confirmBtn = document.getElementById('modalConfirm');
+    confirmBtn.textContent = confirmText || 'Aceptar';
+    confirmBtn.className = danger ? 'btn-primary' : 'btn-primary';
+    confirmBtn.style.background = danger ? 'var(--red-bright)' : '';
+    modalOverlay.classList.add('active');
+    confirmBtn.onclick = ()=>{ onConfirm && onConfirm(); };
+  }
+  function closeModal(){ modalOverlay.classList.remove('active'); }
+  document.getElementById('modalCancel').addEventListener('click', closeModal);
+  modalOverlay.addEventListener('click', (e)=>{ if(e.target===modalOverlay) closeModal(); });
+
+  /* ============== DASHBOARD ============== */
+  let currentRange = 'day';
+  document.querySelectorAll('.range-btn').forEach(b=>{
+    b.addEventListener('click', ()=>{
+      document.querySelectorAll('.range-btn').forEach(x=>x.classList.remove('active'));
+      b.classList.add('active');
+      currentRange = b.dataset.range;
+      renderDashboard();
+    });
+  });
+
+  function startOfRange(range){
+    const now = new Date();
+    if(range==='day'){ return new Date(now.getFullYear(), now.getMonth(), now.getDate()); }
+    if(range==='week'){
+      const d = new Date(now);
+      const day = (d.getDay()+6)%7; // lunes=0
+      d.setDate(d.getDate()-day);
+      d.setHours(0,0,0,0);
+      return d;
+    }
+    if(range==='month'){ return new Date(now.getFullYear(), now.getMonth(), 1); }
+    return new Date(0);
+  }
+
+  function renderDashboard(){
+    renderDashboardStats();
+    if(document.getElementById('view-dashboard').classList.contains('active')){
+      renderChart7();
+    }
+    renderRecent();
+  }
+
+  function renderDashboardStats(){
+    const start = startOfRange(currentRange);
+    const inc = income.filter(t=>new Date(t.date) >= start);
+    const exp = expenses.filter(t=>new Date(t.date) >= start);
+    const totalInc = inc.reduce((a,b)=>a+Number(b.price),0);
+    const totalExp = exp.reduce((a,b)=>a+Number(b.amount),0);
+    const totalMargin = inc.reduce((a,b)=>a+(Number(b.price)-Number(b.cost||0)),0);
+    document.getElementById('statIncome').textContent = money(totalInc);
+    document.getElementById('statExpense').textContent = money(totalExp);
+    document.getElementById('statMargin').textContent = money(totalMargin);
+    document.getElementById('statProfit').textContent = money(totalInc-totalExp);
+
+    // servicio más vendido del mes
+    const monthStart = startOfRange('month');
+    const incMonth = income.filter(t=>new Date(t.date) >= monthStart);
+    const counts = {};
+    incMonth.forEach(t=>{ counts[t.serviceName] = (counts[t.serviceName]||0)+1; });
+    const top = Object.entries(counts).sort((a,b)=>b[1]-a[1])[0];
+    document.getElementById('topServiceVal').textContent = top ? `${top[0]} · ${top[1]} veces` : 'Aún no hay datos';
+
+    // insumos con stock bajo
+    const lowStockItems = insumos.filter(it=>Number(it.stock) <= Number(it.minStock));
+    const lowBadge = document.getElementById('lowStockBadge');
+    if(lowStockItems.length>0){
+      lowBadge.style.display = 'flex';
+      document.getElementById('lowStockVal').textContent = lowStockItems.map(it=>it.name).join(', ');
+    } else {
+      lowBadge.style.display = 'none';
+    }
+  }
+
+  function renderRecent(){
+    const all = [...income.map(t=>({...t,type:'income'})), ...expenses.map(t=>({...t,type:'expense'}))]
+      .sort((a,b)=> new Date(b.date)-new Date(a.date)).slice(0,6);
+    document.getElementById('recentList').innerHTML = renderTxRows(all, true);
+    bindDeleteButtons('recentList');
+  }
+
+  function renderTxRows(list, compact){
+    if(list.length===0){
+      return `<div class="empty-state"><div class="glyph">🪒</div><p>Aún no hay movimientos registrados.</p></div>`;
+    }
+    return list.map(t=>{
+      const isIncome = t.type==='income';
+      const title = isIncome ? t.serviceName : t.description;
+      const sub = new Date(t.date).toLocaleString('es', {day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit'}) + ' · ' + (t.payment||'');
+      const amount = isIncome ? Number(t.price) : Number(t.amount);
+      return `<div class="tx-row">
+        <div class="tx-icon ${isIncome?'income':'expense'}">${isIncome?'✂️':'🧾'}</div>
+        <div class="tx-body">
+          <div class="tx-title">${escapeHtml(title)}</div>
+          <div class="tx-meta">${sub}</div>
+        </div>
+        <div class="tx-amount ${isIncome?'income':'expense'}">${isIncome?'+':'-'}${money(amount)}</div>
+        <button class="tx-del" data-id="${t.id}" data-type="${t.type}">✕</button>
+      </div>`;
+    }).join('');
+  }
+
+  function bindDeleteButtons(containerId){
+    document.querySelectorAll('#'+containerId+' .tx-del').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        const id = btn.dataset.id, type = btn.dataset.type;
+        openModal({
+          title:'Eliminar movimiento',
+          body:'Esta acción no se puede deshacer. ¿Deseas continuar?',
+          confirmText:'Eliminar',
+          danger:true,
+          onConfirm:()=>{
+            if(type==='income'){ income = income.filter(t=>t.id!==id); save(DB_KEYS.income, income); }
+            else{ expenses = expenses.filter(t=>t.id!==id); save(DB_KEYS.expenses, expenses); }
+            closeModal(); toast('Movimiento eliminado');
+            syncAll();
+          }
+        });
+      });
+    });
+  }
+
+  function escapeHtml(str){
+    const d = document.createElement('div'); d.textContent = str==null?'':str; return d.innerHTML;
+  }
+
+  /* ============== GRÁFICA (canvas nativo, sin librerías) ============== */
+  function renderChart7(){
+    const canvas = document.getElementById('chart7');
+    const ctx = canvas.getContext('2d');
+    const dpr = window.devicePixelRatio || 1;
+    const cssWidth = canvas.parentElement.clientWidth - 28;
+    const cssHeight = 140;
+    canvas.width = cssWidth*dpr; canvas.height = cssHeight*dpr;
+    canvas.style.width = cssWidth+'px'; canvas.style.height = cssHeight+'px';
+    ctx.setTransform(dpr,0,0,dpr,0,0);
+    ctx.clearRect(0,0,cssWidth,cssHeight);
+
+    const days = [];
+    for(let i=6;i>=0;i--){
+      const d = new Date(); d.setDate(d.getDate()-i); d.setHours(0,0,0,0);
+      days.push(d);
+    }
+    const data = days.map(d=>{
+      const next = new Date(d); next.setDate(next.getDate()+1);
+      const inc = income.filter(t=>{const dt=new Date(t.date); return dt>=d && dt<next;}).reduce((a,b)=>a+Number(b.price),0);
+      const exp = expenses.filter(t=>{const dt=new Date(t.date); return dt>=d && dt<next;}).reduce((a,b)=>a+Number(b.amount),0);
+      return {d, inc, exp};
+    });
+    const max = Math.max(1, ...data.map(x=>Math.max(x.inc,x.exp)));
+    const padBottom = 22, padTop = 6;
+    const chartH = cssHeight - padBottom - padTop;
+    const groupW = cssWidth/7;
+    const barW = Math.min(16, groupW*0.28);
+
+    const styles = getComputedStyle(document.documentElement);
+    const cIncome = styles.getPropertyValue('--green-bright').trim();
+    const cExpense = styles.getPropertyValue('--red-bright').trim();
+    const cMuted = styles.getPropertyValue('--muted-2').trim();
+
+    data.forEach((item,i)=>{
+      const cx = groupW*i + groupW/2;
+      const hInc = (item.inc/max)*chartH;
+      const hExp = (item.exp/max)*chartH;
+      ctx.fillStyle = cIncome;
+      roundRect(ctx, cx-barW-2, padTop+chartH-hInc, barW, hInc, 3);
+      ctx.fillStyle = cExpense;
+      roundRect(ctx, cx+2, padTop+chartH-hExp, barW, hExp, 3);
+      ctx.fillStyle = cMuted;
+      ctx.font = '10px sans-serif';
+      ctx.textAlign = 'center';
+      const label = item.d.toLocaleDateString('es', {weekday:'short'}).slice(0,3);
+      ctx.fillText(label, cx, cssHeight-6);
+    });
+  }
+  function roundRect(ctx,x,y,w,h,r){
+    if(h<=0) h=0.001;
+    ctx.beginPath();
+    ctx.moveTo(x+r,y);
+    ctx.arcTo(x+w,y,x+w,y+h,r);
+    ctx.arcTo(x+w,y+h,x,y+h,r);
+    ctx.arcTo(x,y+h,x,y,r);
+    ctx.arcTo(x,y,x+w,y,r);
+    ctx.closePath();
+    ctx.fill();
+  }
+  window.addEventListener('resize', ()=>{ if(document.getElementById('view-dashboard').classList.contains('active')) renderChart7(); });
+
+  /* ============== REGISTRAR INGRESO ============== */
+  let selectedServiceId = null;
+  function renderServicePick(){
+    const wrap = document.getElementById('servicePick');
+    if(services.length===0){
+      wrap.style.gridTemplateColumns = '1fr';
+      wrap.innerHTML = `<div class="empty-state" style="padding:20px 6px;">
+        <div class="glyph">✂️</div>
+        <p>No tienes servicios en tu catálogo.</p>
+        <button class="btn-secondary" type="button" id="goAddServiceFromIncome" style="margin-top:10px;">+ Agregar servicio</button>
+      </div>`;
+      const goBtn = document.getElementById('goAddServiceFromIncome');
+      if(goBtn) goBtn.addEventListener('click', ()=>{ goTo('catalogo'); switchSubtab('servicios'); });
+      return;
+    }
+    wrap.style.gridTemplateColumns = '';
+    wrap.innerHTML = services.map(s=>`
+      <button type="button" class="svc" data-id="${s.id}" data-price="${s.price}">
+        <span class="n">${escapeHtml(s.name)}</span>
+        <span class="p">${money(s.price)}</span>
+      </button>`).join('');
+    wrap.querySelectorAll('.svc').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        wrap.querySelectorAll('.svc').forEach(b=>b.classList.remove('active'));
+        btn.classList.add('active');
+        selectedServiceId = btn.dataset.id;
+        document.getElementById('incomeAmount').value = btn.dataset.price;
+      });
+    });
+    const stillExists = services.some(s=>s.id===selectedServiceId);
+    if(!stillExists){ selectedServiceId = null; }
+    if(!selectedServiceId){
+      wrap.querySelector('.svc').click();
+    } else {
+      wrap.querySelector(`.svc[data-id="${selectedServiceId}"]`).classList.add('active');
+    }
+  }
+  document.querySelectorAll('#incomePayGroup button').forEach(b=>{
+    b.addEventListener('click', ()=>{
+      document.querySelectorAll('#incomePayGroup button').forEach(x=>x.classList.remove('active'));
+      b.classList.add('active');
+    });
+  });
+  document.getElementById('saveIncomeBtn').addEventListener('click', ()=>{
+    const svc = services.find(s=>s.id===selectedServiceId);
+    const amount = parseFloat(document.getElementById('incomeAmount').value);
+    const dateVal = document.getElementById('incomeDate').value;
+    const note = document.getElementById('incomeNote').value.trim();
+    const payBtn = document.querySelector('#incomePayGroup button.active');
+    if(!svc){ toast('Selecciona un servicio'); return; }
+    if(isNaN(amount) || amount<=0){ toast('Ingresa un precio válido'); return; }
+    if(!dateVal){ toast('Selecciona fecha y hora'); return; }
+
+    const costSnapshot = serviceCost(svc);
+    income.push({
+      id: uid(), serviceId: svc.id, serviceName: svc.name, price: amount,
+      cost: costSnapshot,
+      payment: payBtn.dataset.val, date: new Date(dateVal).toISOString(), note
+    });
+    save(DB_KEYS.income, income);
+
+    // Descuenta automáticamente los insumos usados por este servicio, según su receta
+    const recipe = svc.recipe || [];
+    let lowStockHit = null;
+    recipe.forEach(r=>{
+      const ins = insumos.find(i=>i.id===r.insumoId);
+      if(!ins) return;
+      const wasLow = Number(ins.stock) <= Number(ins.minStock);
+      ins.stock = Math.max(0, Number(ins.stock) - Number(r.qty));
+      const nowLow = Number(ins.stock) <= Number(ins.minStock);
+      if(nowLow && !wasLow) lowStockHit = ins.name;
+    });
+    if(recipe.length>0) save(DB_KEYS.insumos, insumos);
+
+    toast(lowStockHit ? `Ingreso registrado ✓ · ⚠ Stock bajo: ${lowStockHit}` : 'Ingreso registrado ✓');
+    document.getElementById('incomeNote').value='';
+    syncAll();
+    goTo('dashboard');
+  });
+
+  /* ============== REGISTRAR GASTO ============== */
+  function renderCategorySelect(){
+    const sel = document.getElementById('expenseCategory');
+    const prevVal = sel.value;
+    if(categories.length===0){
+      sel.innerHTML = `<option value="">Sin categorías — agrega una en Catálogo</option>`;
+      return;
+    }
+    sel.innerHTML = categories.map(c=>`<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join('');
+    if(categories.includes(prevVal)) sel.value = prevVal;
+  }
+  function renderExpenseInsumoLink(){
+    const sel = document.getElementById('expenseInsumoLink');
+    const prevVal = sel.value;
+    sel.innerHTML = `<option value="">Ninguno</option>` +
+      insumos.map(it=>`<option value="${it.id}">${escapeHtml(it.name)} (${it.unit})</option>`).join('');
+    if(insumos.some(it=>it.id===prevVal)) sel.value = prevVal;
+    toggleExpenseInsumoQty();
+  }
+  function toggleExpenseInsumoQty(){
+    const sel = document.getElementById('expenseInsumoLink');
+    const group = document.getElementById('expenseInsumoQtyGroup');
+    const it = insumos.find(i=>i.id===sel.value);
+    if(it){
+      group.style.display = '';
+      document.getElementById('expenseInsumoUnitLbl').textContent = `(${it.unit})`;
+    } else {
+      group.style.display = 'none';
+      document.getElementById('expenseInsumoQty').value = '';
+    }
+  }
+  document.getElementById('expenseInsumoLink').addEventListener('change', toggleExpenseInsumoQty);
+  document.querySelectorAll('#expensePayGroup button').forEach(b=>{
+    b.addEventListener('click', ()=>{
+      document.querySelectorAll('#expensePayGroup button').forEach(x=>x.classList.remove('active'));
+      b.classList.add('active');
+    });
+  });
+  document.getElementById('saveExpenseBtn').addEventListener('click', ()=>{
+    const desc = document.getElementById('expenseDesc').value.trim();
+    const amount = parseFloat(document.getElementById('expenseAmount').value);
+    const cat = document.getElementById('expenseCategory').value;
+    const dateVal = document.getElementById('expenseDate').value;
+    const payBtn = document.querySelector('#expensePayGroup button.active');
+    const insumoId = document.getElementById('expenseInsumoLink').value;
+    const insumoQty = parseFloat(document.getElementById('expenseInsumoQty').value);
+    if(!desc){ toast('Escribe una descripción'); return; }
+    if(isNaN(amount) || amount<=0){ toast('Ingresa un monto válido'); return; }
+    if(!cat){ toast('Agrega al menos una categoría en Catálogo'); return; }
+    if(!dateVal){ toast('Selecciona fecha y hora'); return; }
+    if(insumoId && (isNaN(insumoQty) || insumoQty<=0)){ toast('Ingresa la cantidad comprada del insumo'); return; }
+
+    const expenseRecord = {
+      id: uid(), description: desc, amount, category: cat,
+      payment: payBtn.dataset.val, date: new Date(dateVal).toISOString()
+    };
+    if(insumoId){ expenseRecord.insumoId = insumoId; expenseRecord.insumoQty = insumoQty; }
+    expenses.push(expenseRecord);
+    save(DB_KEYS.expenses, expenses);
+
+    // Si la compra está vinculada a un insumo, aumenta su stock automáticamente
+    if(insumoId){
+      const ins = insumos.find(i=>i.id===insumoId);
+      if(ins){
+        ins.stock = Number(ins.stock) + insumoQty;
+        save(DB_KEYS.insumos, insumos);
+      }
+    }
+
+    toast(insumoId ? 'Gasto registrado ✓ · Stock actualizado' : 'Gasto registrado ✓');
+    document.getElementById('expenseDesc').value='';
+    document.getElementById('expenseAmount').value='';
+    document.getElementById('expenseInsumoLink').value='';
+    toggleExpenseInsumoQty();
+    syncAll();
+    goTo('dashboard');
+  });
+
+  /* ============== HISTORIAL ============== */
+  let historyFilter = 'all';
+  document.querySelectorAll('.chip[data-filter]').forEach(chip=>{
+    chip.addEventListener('click', ()=>{
+      document.querySelectorAll('.chip[data-filter]').forEach(c=>c.classList.remove('active'));
+      chip.classList.add('active');
+      historyFilter = chip.dataset.filter;
+      renderHistory();
+    });
+  });
+  document.getElementById('historyDate').addEventListener('change', renderHistory);
+
+  function renderHistory(){
+    const dateGroup = document.getElementById('historyDateGroup');
+    if(historyFilter==='cierres'){
+      dateGroup.style.display = 'none';
+      renderCierresList();
+      return;
+    }
+    dateGroup.style.display = '';
+    const dateVal = document.getElementById('historyDate').value;
+    let all = [...income.map(t=>({...t,type:'income'})), ...expenses.map(t=>({...t,type:'expense'}))];
+    if(historyFilter!=='all'){ all = all.filter(t=>t.type===historyFilter); }
+    if(dateVal){
+      all = all.filter(t=>{
+        const d = new Date(t.date);
+        const local = new Date(d.getTime() - d.getTimezoneOffset()*60000).toISOString().slice(0,10);
+        return local===dateVal;
+      });
+    }
+    all.sort((a,b)=> new Date(b.date)-new Date(a.date));
+    document.getElementById('historyList').innerHTML = renderTxRows(all);
+    bindDeleteButtons('historyList');
+  }
+
+  /* ============== CIERRE DE CAJA DIARIO ============== */
+  function dateKeyLocal(d){
+    const dt = new Date(d);
+    return new Date(dt.getTime() - dt.getTimezoneOffset()*60000).toISOString().slice(0,10);
+  }
+  function todaysBreakdown(){
+    const start = startOfRange('day');
+    const next = new Date(start); next.setDate(next.getDate()+1);
+    const inc = income.filter(t=>{const d=new Date(t.date); return d>=start && d<next;});
+    const exp = expenses.filter(t=>{const d=new Date(t.date); return d>=start && d<next;});
+    const incCash = inc.filter(t=>t.payment==='Efectivo').reduce((a,b)=>a+Number(b.price),0);
+    const incCard = inc.filter(t=>t.payment==='Tarjeta').reduce((a,b)=>a+Number(b.price),0);
+    const expCash = exp.filter(t=>t.payment==='Efectivo').reduce((a,b)=>a+Number(b.amount),0);
+    const expCard = exp.filter(t=>t.payment==='Tarjeta').reduce((a,b)=>a+Number(b.amount),0);
+    return {
+      incCash, incCard, expCash, expCard,
+      expectedCash: incCash - expCash,
+      totalIncome: incCash+incCard, totalExpense: expCash+expCard,
+      txCount: inc.length+exp.length
+    };
+  }
+  document.getElementById('closeCashBtn').addEventListener('click', ()=>{
+    const b = todaysBreakdown();
+    const todayKey = dateKeyLocal(new Date());
+    const alreadyClosed = cierres.some(c=>c.dateKey===todayKey);
+    if(b.txCount===0){ toast('No hay movimientos registrados hoy'); return; }
+    const todayLabel = new Date().toLocaleDateString('es', {weekday:'long', day:'numeric', month:'long'});
+    openModal({
+      title:'Cierre de caja',
+      body: todayLabel.charAt(0).toUpperCase()+todayLabel.slice(1),
+      formHtml:`
+        <div style="font-size:13.5px; line-height:2; margin:4px 0 14px;">
+          <div style="display:flex; justify-content:space-between;"><span style="color:var(--muted);">Ingresos efectivo</span><span class="num" style="color:var(--green-bright);">${money(b.incCash)}</span></div>
+          <div style="display:flex; justify-content:space-between;"><span style="color:var(--muted);">Ingresos tarjeta</span><span class="num" style="color:var(--green-bright);">${money(b.incCard)}</span></div>
+          <div style="display:flex; justify-content:space-between;"><span style="color:var(--muted);">Gastos efectivo</span><span class="num" style="color:var(--red-bright);">−${money(b.expCash)}</span></div>
+          <div style="display:flex; justify-content:space-between;"><span style="color:var(--muted);">Gastos tarjeta</span><span class="num" style="color:var(--red-bright);">−${money(b.expCard)}</span></div>
+          <hr class="divider-dashed">
+          <div style="display:flex; justify-content:space-between; font-weight:700;"><span>Efectivo esperado en caja</span><span class="num" style="color:var(--gold-bright);">${money(b.expectedCash)}</span></div>
+        </div>
+        <div class="form-group">
+          <label>Efectivo contado (opcional)</label>
+          <div class="amount-input-wrap"><span class="currency">$</span>
+            <input type="number" step="0.01" class="form-control" id="cashCounted" placeholder="${b.expectedCash.toFixed(2)}">
+          </div>
+        </div>
+        ${alreadyClosed ? '<p style="font-size:12px; color:var(--red-bright); margin:4px 0 0;">Ya cerraste la caja hoy. Esto guardará un cierre adicional.</p>' : ''}
+      `,
+      confirmText:'Cerrar caja',
+      onConfirm:()=>{
+        const countedRaw = document.getElementById('cashCounted').value;
+        const counted = countedRaw==='' ? null : parseFloat(countedRaw);
+        const difference = (counted!==null && !isNaN(counted)) ? (counted - b.expectedCash) : null;
+        cierres.push({
+          id: uid(), dateKey: todayKey, date: new Date().toISOString(),
+          incCash: b.incCash, incCard: b.incCard, expCash: b.expCash, expCard: b.expCard,
+          expectedCash: b.expectedCash, totalIncome: b.totalIncome, totalExpense: b.totalExpense,
+          cashCounted: counted, difference
+        });
+        save(DB_KEYS.cierres, cierres);
+        closeModal();
+        toast('Caja cerrada ✓');
+      }
+    });
+  });
+  function renderCierresList(){
+    const wrap = document.getElementById('historyList');
+    if(cierres.length===0){
+      wrap.innerHTML = `<div class="empty-state"><div class="glyph">🔒</div><p>Aún no has cerrado caja ningún día.</p></div>`;
+      return;
+    }
+    const sorted = [...cierres].sort((a,b)=> new Date(b.date)-new Date(a.date));
+    wrap.innerHTML = sorted.map(c=>{
+      const label = new Date(c.date).toLocaleString('es', {day:'2-digit', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit'});
+      let diffLine = '';
+      if(c.difference!==null && c.difference!==undefined){
+        const ok = Math.abs(c.difference) < 0.01;
+        const color = ok ? 'var(--green-bright)' : 'var(--red-bright)';
+        const sign = c.difference>0 ? '+' : '';
+        diffLine = `<div class="meta-line num" style="color:${color};">Diferencia: ${sign}${money(c.difference)}${ok?' (cuadra ✓)':''}</div>`;
+      }
+      return `<div class="tx-row" style="align-items:flex-start;">
+        <div class="tx-icon expense" style="background:rgba(193,122,79,.18); color:var(--gold-bright);">🔒</div>
+        <div class="tx-body">
+          <div class="tx-title">Cierre de caja</div>
+          <div class="tx-meta">${label}</div>
+          <div class="meta-line num">Ingresos ${money(c.totalIncome)} · Gastos ${money(c.totalExpense)} · Efvo. esperado ${money(c.expectedCash)}</div>
+          ${diffLine}
+        </div>
+        <button class="tx-del" data-cierre-id="${c.id}" aria-label="Eliminar cierre">✕</button>
+      </div>`;
+    }).join('');
+    wrap.querySelectorAll('[data-cierre-id]').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        const id = btn.dataset.cierreId;
+        openModal({
+          title:'Eliminar cierre', body:'Este registro de cierre se eliminará permanentemente.',
+          confirmText:'Eliminar', danger:true,
+          onConfirm:()=>{
+            cierres = cierres.filter(c=>c.id!==id);
+            save(DB_KEYS.cierres, cierres);
+            closeModal(); renderCierresList(); toast('Cierre eliminado');
+          }
+        });
+      });
+    });
+  }
+
+  /* ============== SINCRONIZACIÓN GLOBAL EN TIEMPO REAL ==============
+     Cualquier acción que modifique datos (vender un servicio, comprar
+     un insumo, editar precios, renombrar categorías, etc.) llama a
+     syncAll(). Esto refresca TODO: el dashboard, el historial (si está
+     visible), y las tres listas del catálogo — así nunca hay pantallas
+     desactualizadas sin importar desde dónde se hizo el cambio. */
+  function syncAll(){
+    renderDashboardStats();
+    if(document.getElementById('view-dashboard').classList.contains('active')){ renderChart7(); }
+    renderRecent();
+    if(document.getElementById('view-historial').classList.contains('active')){ renderHistory(); }
+    renderServicesView();
+    renderInsumosView();
+    renderCategoriesView();
+    renderUnitsView();
+    renderCategorySelect();
+    renderExpenseInsumoLink();
+  }
+
+  /* ============== CATÁLOGO: SERVICIOS · INSUMOS · CATEGORÍAS (CRUD completo) ============== */
+  let catalogSubtab = 'servicios';
+  function switchSubtab(tab){
+    catalogSubtab = tab;
+    document.querySelectorAll('.chip[data-subtab]').forEach(c=>c.classList.toggle('active', c.dataset.subtab===tab));
+    ['servicios','insumos','categorias','unidades'].forEach(t=>{
+      document.getElementById('panel-'+t).style.display = (t===tab) ? '' : 'none';
+    });
+    renderCatalogo();
+  }
+  document.querySelectorAll('.chip[data-subtab]').forEach(chip=>{
+    chip.addEventListener('click', ()=>switchSubtab(chip.dataset.subtab));
+  });
+  function renderCatalogo(){
+    if(catalogSubtab==='servicios') renderServicesView();
+    else if(catalogSubtab==='insumos') renderInsumosView();
+    else if(catalogSubtab==='categorias') renderCategoriesView();
+    else renderUnitsView();
+  }
+
+  /* ---------- SERVICIOS (Create, Read, Update, Delete + receta de insumos) ---------- */
+  function serviceCost(svc){
+    return (svc.recipe||[]).reduce((sum,r)=>{
+      const ins = insumos.find(i=>i.id===r.insumoId);
+      return sum + (ins ? Number(ins.unitCost)*Number(r.qty) : 0);
+    }, 0);
+  }
+  function renderServicesView(){
+    const wrap = document.getElementById('serviceList');
+    if(services.length===0){
+      wrap.innerHTML = `<div class="empty-state"><div class="glyph">✂️</div><p>No hay servicios en tu catálogo. Agrega el primero.</p></div>`;
+      return;
+    }
+    wrap.innerHTML = services.map(s=>{
+      const recipeCount = (s.recipe||[]).length;
+      const recipeText = recipeCount>0
+        ? `${recipeCount} insumo${recipeCount>1?'s':''} vinculado${recipeCount>1?'s':''}`
+        : 'Sin insumos vinculados';
+      const cost = serviceCost(s);
+      const margin = Number(s.price) - cost;
+      const marginPct = Number(s.price)>0 ? (margin/Number(s.price))*100 : 0;
+      const marginColor = margin>=0 ? 'var(--green-bright)' : 'var(--red-bright)';
+      const marginLine = recipeCount>0
+        ? `<div class="meta-line num" style="color:${marginColor};">Costo ${money(cost)} · Margen ${money(margin)} (${marginPct.toFixed(0)}%)</div>`
+        : '';
+      return `<div class="svc-row">
+        <div class="info">
+          <div class="name">${escapeHtml(s.name)}</div>
+          <div class="price">${money(s.price)}</div>
+          <div class="meta-line">🧴 ${recipeText}</div>
+          ${marginLine}
+        </div>
+        <div class="row-actions">
+          <button class="icon-btn" data-edit-service="${s.id}" aria-label="Editar servicio">✎</button>
+          <button class="icon-btn" data-del-service="${s.id}" aria-label="Eliminar servicio">✕</button>
+        </div>
+      </div>`;
+    }).join('');
+    wrap.querySelectorAll('[data-edit-service]').forEach(b=>b.addEventListener('click', ()=>openServiceModal(services.find(s=>s.id===b.dataset.editService))));
+    wrap.querySelectorAll('[data-del-service]').forEach(b=>b.addEventListener('click', ()=>deleteService(b.dataset.delService)));
+  }
+
+  function openServiceModal(existingService){
+    const isEdit = !!existingService;
+    let name = existingService ? existingService.name : '';
+    let price = existingService ? existingService.price : '';
+    let recipe = existingService && existingService.recipe ? JSON.parse(JSON.stringify(existingService.recipe)) : [];
+
+    function recipeRowHtml(r, i){
+      const opts = insumos.map(ins=>`<option value="${ins.id}" ${ins.id===r.insumoId?'selected':''}>${escapeHtml(ins.name)}</option>`).join('');
+      return `<div style="display:flex;gap:6px;align-items:center;margin-bottom:8px;">
+        <select class="form-control" data-recipe-insumo="${i}" style="flex:1;">${opts}</select>
+        <input type="number" min="0.01" step="0.01" class="form-control" data-recipe-qty="${i}" value="${r.qty}" style="width:64px; padding:13px 8px;">
+        <button type="button" class="icon-btn" data-recipe-remove="${i}" aria-label="Quitar">✕</button>
+      </div>`;
+    }
+    function buildForm(){
+      const rowsHtml = recipe.length>0
+        ? recipe.map(recipeRowHtml).join('')
+        : `<p style="font-size:12px;color:var(--muted-2); margin:0 0 8px;">Ningún insumo vinculado. Al vincular uno, se descontará automáticamente del inventario cada vez que registres este servicio.</p>`;
+      return `<div class="form-group"><label>Nombre</label><input class="form-control" id="fName" value="${escapeHtml(name)}" placeholder="Ej. Corte fade"></div>
+        <div class="form-group"><label>Precio</label><div class="amount-input-wrap"><span class="currency">$</span><input type="number" step="0.01" min="0" class="form-control" id="fPrice" value="${price}" placeholder="0.00"></div></div>
+        <div class="form-group">
+          <label>Insumos que consume (opcional)</label>
+          <div id="recipeRows">${rowsHtml}</div>
+          <button type="button" class="btn-secondary" id="addRecipeRowBtn" style="margin-top:2px;">+ Vincular insumo</button>
+        </div>`;
+    }
+    function attachHandlers(){
+      document.getElementById('fName').oninput = e=>{ name = e.target.value; };
+      document.getElementById('fPrice').oninput = e=>{ price = e.target.value; };
+      const addBtn = document.getElementById('addRecipeRowBtn');
+      if(addBtn) addBtn.onclick = ()=>{
+        if(insumos.length===0){ toast('Primero agrega insumos en el catálogo'); return; }
+        recipe.push({insumoId: insumos[0].id, qty:1});
+        rerender();
+      };
+      document.querySelectorAll('[data-recipe-insumo]').forEach(sel=>{
+        sel.onchange = e=>{ recipe[parseInt(e.target.dataset.recipeInsumo,10)].insumoId = e.target.value; };
+      });
+      document.querySelectorAll('[data-recipe-qty]').forEach(inp=>{
+        inp.oninput = e=>{ recipe[parseInt(e.target.dataset.recipeQty,10)].qty = parseFloat(e.target.value)||0; };
+      });
+      document.querySelectorAll('[data-recipe-remove]').forEach(btn=>{
+        btn.onclick = ()=>{ recipe.splice(parseInt(btn.dataset.recipeRemove,10),1); rerender(); };
+      });
+    }
+    function rerender(){
+      document.getElementById('modalForm').innerHTML = buildForm();
+      attachHandlers();
+    }
+
+    openModal({
+      title: isEdit ? 'Editar servicio' : 'Nuevo servicio',
+      formHtml: buildForm(),
+      confirmText:'Guardar',
+      onConfirm:()=>{
+        const finalName = document.getElementById('fName').value.trim();
+        const finalPrice = parseFloat(document.getElementById('fPrice').value);
+        if(!finalName || isNaN(finalPrice) || finalPrice<0){ toast('Completa nombre y precio'); return; }
+        if(isDuplicateName(services, finalName, isEdit?existingService.id:undefined)){ toast('Ya existe un servicio con ese nombre'); return; }
+        const cleanRecipe = recipe.filter(r=>r.insumoId && r.qty>0);
+        if(isEdit){
+          existingService.name = finalName; existingService.price = finalPrice; existingService.recipe = cleanRecipe;
+        } else {
+          services.push({id:uid(), name:finalName, price:finalPrice, recipe:cleanRecipe});
+        }
+        save(DB_KEYS.services, services);
+        closeModal(); syncAll(); toast(isEdit?'Servicio actualizado ✓':'Servicio agregado ✓');
+      }
+    });
+    attachHandlers();
+  }
+
+  document.getElementById('addServiceBtn').addEventListener('click', ()=>openServiceModal(null));
+
+  function deleteService(id){
+    openModal({
+      title:'Eliminar servicio', body:'Los ingresos ya registrados con este servicio no se verán afectados; solo desaparecerá del catálogo.',
+      confirmText:'Eliminar', danger:true,
+      onConfirm:()=>{
+        services = services.filter(s=>s.id!==id);
+        save(DB_KEYS.services, services);
+        closeModal(); syncAll(); toast('Servicio eliminado');
+      }
+    });
+  }
+
+  /* ---------- INSUMOS (Create, Read, Update, Delete + control de stock) ---------- */
+  function renderInsumosView(){
+    const wrap = document.getElementById('insumoList');
+    if(insumos.length===0){
+      wrap.innerHTML = `<div class="empty-state"><div class="glyph">🧴</div><p>No hay insumos registrados. Agrega el primero.</p></div>`;
+      return;
+    }
+    wrap.innerHTML = insumos.map(it=>{
+      const low = Number(it.stock) <= Number(it.minStock);
+      return `<div class="insumo-row">
+        <div class="info">
+          <div class="name">${escapeHtml(it.name)} <span class="stock-badge ${low?'low':''}">${low?'⚠ bajo':'ok'}</span></div>
+          <div class="meta">${it.stock} ${escapeHtml(it.unit)} en stock · mín. ${it.minStock} · costo ${money(it.unitCost)} / ${escapeHtml(it.unit)}</div>
+          <div class="stepper" style="margin-top:6px;">
+            <button type="button" data-stock-down="${it.id}" aria-label="Restar stock">−</button>
+            <span class="num" style="font-size:12.5px; min-width:26px; text-align:center;">${it.stock}</span>
+            <button type="button" data-stock-up="${it.id}" aria-label="Sumar stock">＋</button>
+          </div>
+        </div>
+        <div class="row-actions">
+          <button class="icon-btn" data-edit-insumo="${it.id}" aria-label="Editar insumo">✎</button>
+          <button class="icon-btn" data-del-insumo="${it.id}" aria-label="Eliminar insumo">✕</button>
+        </div>
+      </div>`;
+    }).join('');
+    wrap.querySelectorAll('[data-edit-insumo]').forEach(b=>b.addEventListener('click', ()=>editInsumo(b.dataset.editInsumo)));
+    wrap.querySelectorAll('[data-del-insumo]').forEach(b=>b.addEventListener('click', ()=>deleteInsumo(b.dataset.delInsumo)));
+    wrap.querySelectorAll('[data-stock-up]').forEach(b=>b.addEventListener('click', ()=>adjustStock(b.dataset.stockUp, 1)));
+    wrap.querySelectorAll('[data-stock-down]').forEach(b=>b.addEventListener('click', ()=>adjustStock(b.dataset.stockDown, -1)));
+  }
+  function adjustStock(id, delta){
+    const it = insumos.find(x=>x.id===id);
+    if(!it) return;
+    const wasLow = Number(it.stock) <= Number(it.minStock);
+    it.stock = Math.max(0, Number(it.stock) + delta);
+    save(DB_KEYS.insumos, insumos);
+    syncAll();
+    const nowLow = Number(it.stock) <= Number(it.minStock);
+    if(nowLow && !wasLow){ toast(`⚠ Stock bajo: ${it.name}`); }
+  }
+  function insumoFormHtml(it){
+    it = it || {name:'', unit:(units[0]||'Unidad'), stock:0, minStock:0, unitCost:0};
+    const unitList = units.includes(it.unit) ? units : [...units, it.unit].filter(Boolean);
+    return `<div class="form-group"><label>Nombre</label><input class="form-control" id="fiName" value="${escapeHtml(it.name)}" placeholder="Ej. Gel para cabello"></div>
+      <div class="form-group"><label>Unidad de medida</label>
+        <select class="form-control" id="fiUnit">${unitList.map(u=>`<option value="${escapeHtml(u)}" ${u===it.unit?'selected':''}>${escapeHtml(u)}</option>`).join('')}</select>
+      </div>
+      <div class="form-group"><label>Stock actual</label><input type="number" step="0.01" min="0" class="form-control" id="fiStock" value="${it.stock}" placeholder="0"></div>
+      <div class="form-group"><label>Stock mínimo (alerta)</label><input type="number" step="0.01" min="0" class="form-control" id="fiMin" value="${it.minStock}" placeholder="0"></div>
+      <div class="form-group"><label>Costo por unidad</label><div class="amount-input-wrap"><span class="currency">$</span><input type="number" step="0.01" min="0" class="form-control" id="fiCost" value="${it.unitCost}" placeholder="0.00"></div></div>`;
+  }
+  function readInsumoForm(){
+    return {
+      name: document.getElementById('fiName').value.trim(),
+      unit: document.getElementById('fiUnit').value,
+      stock: parseFloat(document.getElementById('fiStock').value),
+      minStock: parseFloat(document.getElementById('fiMin').value),
+      unitCost: parseFloat(document.getElementById('fiCost').value)
+    };
+  }
+  function validInsumoForm(v){
+    if(!v.name) return 'Escribe un nombre';
+    if(isNaN(v.stock) || v.stock<0) return 'Ingresa un stock válido';
+    if(isNaN(v.minStock) || v.minStock<0) return 'Ingresa un stock mínimo válido';
+    if(isNaN(v.unitCost) || v.unitCost<0) return 'Ingresa un costo válido';
+    return null;
+  }
+  document.getElementById('addInsumoBtn').addEventListener('click', ()=>{
+    openModal({
+      title:'Nuevo insumo', formHtml: insumoFormHtml(), confirmText:'Guardar',
+      onConfirm:()=>{
+        const v = readInsumoForm();
+        const err = validInsumoForm(v);
+        if(err){ toast(err); return; }
+        if(isDuplicateName(insumos, v.name)){ toast('Ya existe un insumo con ese nombre'); return; }
+        insumos.push({id:uid(), ...v});
+        save(DB_KEYS.insumos, insumos);
+        closeModal(); syncAll(); toast('Insumo agregado ✓');
+      }
+    });
+  });
+  function editInsumo(id){
+    const it = insumos.find(x=>x.id===id);
+    if(!it) return;
+    openModal({
+      title:'Editar insumo', formHtml: insumoFormHtml(it), confirmText:'Guardar',
+      onConfirm:()=>{
+        const v = readInsumoForm();
+        const err = validInsumoForm(v);
+        if(err){ toast(err); return; }
+        if(isDuplicateName(insumos, v.name, id)){ toast('Ya existe un insumo con ese nombre'); return; }
+        Object.assign(it, v);
+        save(DB_KEYS.insumos, insumos);
+        closeModal(); syncAll(); toast('Insumo actualizado ✓');
+      }
+    });
+  }
+  function deleteInsumo(id){
+    openModal({
+      title:'Eliminar insumo', body:'Se eliminará permanentemente de tu catálogo de insumos.',
+      confirmText:'Eliminar', danger:true,
+      onConfirm:()=>{
+        insumos = insumos.filter(x=>x.id!==id);
+        save(DB_KEYS.insumos, insumos);
+        closeModal(); syncAll(); toast('Insumo eliminado');
+      }
+    });
+  }
+
+  /* ---------- CATEGORÍAS DE GASTO (Create, Read, Update, Delete) ---------- */
+  function renderCategoriesView(){
+    const catWrap = document.getElementById('categoryList');
+    if(categories.length===0){
+      catWrap.innerHTML = `<div class="empty-state"><p>No hay categorías. Agrega la primera.</p></div>`;
+      return;
+    }
+    catWrap.innerHTML = categories.map((c,i)=>`
+      <div class="svc-row">
+        <div class="info"><div class="name">${escapeHtml(c)}</div></div>
+        <div class="row-actions">
+          <button class="icon-btn" data-edit-cat="${i}" aria-label="Editar categoría">✎</button>
+          <button class="icon-btn" data-del-cat="${i}" aria-label="Eliminar categoría">✕</button>
+        </div>
+      </div>`).join('');
+    catWrap.querySelectorAll('[data-edit-cat]').forEach(b=>b.addEventListener('click', ()=>editCategory(parseInt(b.dataset.editCat,10))));
+    catWrap.querySelectorAll('[data-del-cat]').forEach(b=>b.addEventListener('click', ()=>deleteCategory(parseInt(b.dataset.delCat,10))));
+  }
+  document.getElementById('addCategoryBtn').addEventListener('click', ()=>{
+    openModal({
+      title:'Nueva categoría', formHtml:`<div class="form-group"><label>Nombre</label><input class="form-control" id="fCat" placeholder="Ej. Electricidad"></div>`,
+      confirmText:'Guardar',
+      onConfirm:()=>{
+        const val = document.getElementById('fCat').value.trim();
+        if(!val){ toast('Escribe un nombre'); return; }
+        if(isDuplicateName(categories, val)){ toast('Ya existe esa categoría'); return; }
+        categories.push(val);
+        save(DB_KEYS.categories, categories);
+        closeModal(); syncAll(); toast('Categoría agregada ✓');
+      }
+    });
+  });
+  function editCategory(index){
+    const oldName = categories[index];
+    if(oldName===undefined) return;
+    openModal({
+      title:'Editar categoría', formHtml:`<div class="form-group"><label>Nombre</label><input class="form-control" id="fCat" value="${escapeHtml(oldName)}"></div>`,
+      confirmText:'Guardar',
+      onConfirm:()=>{
+        const val = document.getElementById('fCat').value.trim();
+        if(!val){ toast('Escribe un nombre'); return; }
+        if(isDuplicateName(categories, val, undefined) && val.toLowerCase()!==oldName.toLowerCase()){ toast('Ya existe esa categoría'); return; }
+        categories[index] = val;
+        // Mantiene consistencia: actualiza el nombre también en gastos ya registrados con esa categoría
+        expenses.forEach(e=>{ if(e.category===oldName) e.category = val; });
+        save(DB_KEYS.categories, categories);
+        save(DB_KEYS.expenses, expenses);
+        closeModal(); syncAll(); toast('Categoría actualizada ✓');
+      }
+    });
+  }
+  function deleteCategory(index){
+    if(categories.length<=1){ toast('Debe existir al menos una categoría'); return; }
+    const name = categories[index];
+    const inUse = expenses.filter(e=>e.category===name).length;
+    openModal({
+      title:'Eliminar categoría',
+      body: inUse>0
+        ? `Hay ${inUse} gasto(s) registrados con "${name}". Se eliminará del catálogo pero esos gastos conservarán la categoría en su historial.`
+        : 'Esta acción no se puede deshacer.',
+      confirmText:'Eliminar', danger:true,
+      onConfirm:()=>{
+        categories.splice(index,1);
+        save(DB_KEYS.categories, categories);
+        closeModal(); syncAll(); toast('Categoría eliminada');
+      }
+    });
+  }
+
+  /* ---------- UNIDADES DE MEDIDA (Create, Read, Update, Delete) ---------- */
+  function renderUnitsView(){
+    const wrap = document.getElementById('unitList');
+    if(units.length===0){
+      wrap.innerHTML = `<div class="empty-state"><p>No hay unidades. Agrega la primera.</p></div>`;
+      return;
+    }
+    wrap.innerHTML = units.map((u,i)=>{
+      const inUse = insumos.filter(it=>it.unit===u).length;
+      const usageText = inUse>0 ? `${inUse} insumo${inUse>1?'s':''} la usa${inUse>1?'n':''}` : 'Sin uso actual';
+      return `<div class="svc-row">
+        <div class="info"><div class="name">${escapeHtml(u)}</div><div class="meta-line">${usageText}</div></div>
+        <div class="row-actions">
+          <button class="icon-btn" data-edit-unit="${i}" aria-label="Editar unidad">✎</button>
+          <button class="icon-btn" data-del-unit="${i}" aria-label="Eliminar unidad">✕</button>
+        </div>
+      </div>`;
+    }).join('');
+    wrap.querySelectorAll('[data-edit-unit]').forEach(b=>b.addEventListener('click', ()=>editUnit(parseInt(b.dataset.editUnit,10))));
+    wrap.querySelectorAll('[data-del-unit]').forEach(b=>b.addEventListener('click', ()=>deleteUnit(parseInt(b.dataset.delUnit,10))));
+  }
+  document.getElementById('addUnitBtn').addEventListener('click', ()=>{
+    openModal({
+      title:'Nueva unidad de medida', formHtml:`<div class="form-group"><label>Nombre</label><input class="form-control" id="fUnit" placeholder="Ej. Rollo, Frasco, Par"></div>`,
+      confirmText:'Guardar',
+      onConfirm:()=>{
+        const val = document.getElementById('fUnit').value.trim();
+        if(!val){ toast('Escribe un nombre'); return; }
+        if(isDuplicateName(units, val)){ toast('Ya existe esa unidad'); return; }
+        units.push(val);
+        save(DB_KEYS.units, units);
+        closeModal(); syncAll(); toast('Unidad agregada ✓');
+      }
+    });
+  });
+  function editUnit(index){
+    const oldName = units[index];
+    if(oldName===undefined) return;
+    openModal({
+      title:'Editar unidad', formHtml:`<div class="form-group"><label>Nombre</label><input class="form-control" id="fUnit" value="${escapeHtml(oldName)}"></div>`,
+      confirmText:'Guardar',
+      onConfirm:()=>{
+        const val = document.getElementById('fUnit').value.trim();
+        if(!val){ toast('Escribe un nombre'); return; }
+        if(isDuplicateName(units, val, undefined) && val.toLowerCase()!==oldName.toLowerCase()){ toast('Ya existe esa unidad'); return; }
+        units[index] = val;
+        // Mantiene consistencia: actualiza el nombre también en los insumos que ya la usaban
+        insumos.forEach(it=>{ if(it.unit===oldName) it.unit = val; });
+        save(DB_KEYS.units, units);
+        save(DB_KEYS.insumos, insumos);
+        closeModal(); syncAll(); toast('Unidad actualizada ✓');
+      }
+    });
+  }
+  function deleteUnit(index){
+    if(units.length<=1){ toast('Debe existir al menos una unidad'); return; }
+    const name = units[index];
+    const inUse = insumos.filter(it=>it.unit===name).length;
+    openModal({
+      title:'Eliminar unidad',
+      body: inUse>0
+        ? `Hay ${inUse} insumo(s) usando "${name}". Se eliminará de la lista pero esos insumos conservarán la unidad que ya tenían.`
+        : 'Esta acción no se puede deshacer.',
+      confirmText:'Eliminar', danger:true,
+      onConfirm:()=>{
+        units.splice(index,1);
+        save(DB_KEYS.units, units);
+        closeModal(); syncAll(); toast('Unidad eliminada');
+      }
+    });
+  }
+
+  /* ============== LOGO DEL NEGOCIO ============== */
+  const LOGO_KEY = 'aure_logo';
+  function loadLogo(){
+    let dataUrl = null;
+    try{ dataUrl = localStorage.getItem(LOGO_KEY); }catch(e){}
+    const mark = document.getElementById('brandMark');
+    const lockMark = document.getElementById('lockBrandMark');
+    if(dataUrl){
+      mark.style.backgroundImage = `url("${dataUrl}")`;
+      mark.classList.add('has-logo');
+      if(lockMark) lockMark.style.backgroundImage = `url("${dataUrl}")`;
+    } else {
+      mark.style.backgroundImage = '';
+      mark.classList.remove('has-logo');
+      if(lockMark) lockMark.style.backgroundImage = '';
+    }
+  }
+  function handleLogoFile(file){
+    if(!file) return;
+    if(!file.type || !file.type.startsWith('image/')){ toast('Selecciona un archivo de imagen'); return; }
+    const reader = new FileReader();
+    reader.onload = ()=>{
+      const img = new Image();
+      img.onload = ()=>{
+        const size = 240;
+        const canvas = document.createElement('canvas');
+        canvas.width = size; canvas.height = size;
+        const ctx = canvas.getContext('2d');
+        const scale = Math.max(size/img.width, size/img.height);
+        const w = img.width*scale, h = img.height*scale;
+        ctx.drawImage(img, (size-w)/2, (size-h)/2, w, h);
+        const finalDataUrl = canvas.toDataURL('image/jpeg', 0.85);
+        try{
+          localStorage.setItem(LOGO_KEY, finalDataUrl);
+          loadLogo();
+          toast('Logo actualizado ✓');
+        }catch(e){ toast('No se pudo guardar el logo (memoria llena)'); }
+      };
+      img.onerror = ()=> toast('No se pudo leer la imagen');
+      img.src = reader.result;
+    };
+    reader.onerror = ()=> toast('No se pudo leer el archivo');
+    reader.readAsDataURL(file);
+  }
+  document.getElementById('brandMark').addEventListener('click', ()=>document.getElementById('logoInput').click());
+  document.getElementById('changeLogoBtn').addEventListener('click', ()=>document.getElementById('logoInput').click());
+  document.getElementById('logoInput').addEventListener('change', (e)=>{ handleLogoFile(e.target.files[0]); e.target.value=''; });
+  document.getElementById('removeLogoBtn').addEventListener('click', ()=>{
+    openModal({
+      title:'Quitar logo', body:'Se volverá a mostrar el ícono predeterminado.', confirmText:'Quitar', danger:true,
+      onConfirm:()=>{
+        try{ localStorage.removeItem(LOGO_KEY); }catch(e){}
+        loadLogo(); closeModal(); toast('Logo eliminado');
+      }
+    });
+  });
+
+  /* ============== AJUSTES: RESPALDO ============== */
+  function updateLastBackupText(){
+    const el = document.getElementById('lastBackupText');
+    el.textContent = settings.lastBackup ? new Date(settings.lastBackup).toLocaleString('es') : 'Nunca';
+  }
+  function doExport(){
+    const payload = { services, insumos, income, expenses, categories, units, cierres, exportedAt: new Date().toISOString(), app:'Aure Barbershop', version:4 };
+    const blob = new Blob([JSON.stringify(payload,null,2)], {type:'application/json'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    const stamp = new Date().toISOString().slice(0,10);
+    a.href = url; a.download = `aure-barbershop-respaldo-${stamp}.json`;
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    settings.lastBackup = new Date().toISOString();
+    save(DB_KEYS.settings, settings);
+    updateLastBackupText();
+    hideReminder();
+    toast('Respaldo descargado ✓');
+  }
+  document.getElementById('exportBtn').addEventListener('click', doExport);
+  document.getElementById('reminderBackupBtn').addEventListener('click', doExport);
+
+  document.getElementById('importBtn').addEventListener('click', ()=>{
+    document.getElementById('importFile').click();
+  });
+  document.getElementById('importFile').addEventListener('change', (e)=>{
+    const file = e.target.files[0];
+    if(!file) return;
+    const reader = new FileReader();
+    reader.onload = ()=>{
+      try{
+        const data = JSON.parse(reader.result);
+        openModal({
+          title:'Restaurar respaldo',
+          body:'Esto reemplazará todos los datos actuales en este teléfono por los del archivo. ¿Continuar?',
+          confirmText:'Restaurar', danger:true,
+          onConfirm:()=>{
+            services = data.services || DEFAULT_SERVICES;
+            insumos = data.insumos || DEFAULT_INSUMOS;
+            income = data.income || [];
+            expenses = data.expenses || [];
+            categories = data.categories || DEFAULT_CATEGORIES;
+            units = data.units || DEFAULT_UNITS;
+            cierres = data.cierres || [];
+            if(categories.length===0) categories = DEFAULT_CATEGORIES.slice();
+            if(units.length===0) units = DEFAULT_UNITS.slice();
+            save(DB_KEYS.services, services); save(DB_KEYS.insumos, insumos); save(DB_KEYS.income, income);
+            save(DB_KEYS.expenses, expenses); save(DB_KEYS.categories, categories); save(DB_KEYS.units, units); save(DB_KEYS.cierres, cierres);
+            closeModal(); toast('Datos restaurados ✓');
+            syncAll();
+          }
+        });
+      }catch(err){ toast('Archivo inválido'); }
+    };
+    reader.readAsText(file);
+    e.target.value = '';
+  });
+
+  document.getElementById('resetBtn').addEventListener('click', ()=>{
+    openModal({
+      title:'Borrar ingresos y gastos', body:'Se eliminarán todos los ingresos y gastos registrados. El catálogo de servicios, insumos y categorías no se verá afectado. Esta acción no se puede deshacer.',
+      confirmText:'Borrar todo', danger:true,
+      onConfirm:()=>{
+        income = []; expenses = [];
+        save(DB_KEYS.income, income); save(DB_KEYS.expenses, expenses);
+        closeModal(); toast('Datos borrados');
+        syncAll();
+      }
+    });
+  });
+
+  /* ============== RECORDATORIO DE RESPALDO ============== */
+  const reminderToggle = document.getElementById('reminderToggle');
+  const reminderDaysSel = document.getElementById('reminderDays');
+  reminderToggle.checked = settings.reminderOn;
+  reminderDaysSel.value = String(settings.reminderDays);
+  reminderToggle.addEventListener('change', ()=>{
+    settings.reminderOn = reminderToggle.checked;
+    save(DB_KEYS.settings, settings);
+    checkReminder();
+  });
+  reminderDaysSel.addEventListener('change', ()=>{
+    settings.reminderDays = parseInt(reminderDaysSel.value,10);
+    save(DB_KEYS.settings, settings);
+    checkReminder();
+  });
+  function hideReminder(){ document.getElementById('reminderBanner').classList.remove('show'); }
+  function checkReminder(){
+    if(!settings.reminderOn){ hideReminder(); return; }
+    const ref = settings.lastBackup || settings.installedAt;
+    const diffDays = (Date.now() - new Date(ref).getTime()) / 86400000;
+    if(diffDays >= settings.reminderDays){
+      document.getElementById('reminderText').textContent =
+        `Han pasado ${Math.floor(diffDays)} días desde tu último respaldo. Guárdalo para no perder tu información.`;
+      document.getElementById('reminderBanner').classList.add('show');
+    } else {
+      hideReminder();
+    }
+  }
+
+  document.getElementById('lowStockBadge').addEventListener('click', ()=>{ goTo('catalogo'); switchSubtab('insumos'); });
+
+  /* ============== TEMA (claro / oscuro) ============== */
+  function applyTheme(theme){
+    document.documentElement.setAttribute('data-theme', theme);
+    const btn = document.getElementById('themeToggleBtn');
+    if(btn) btn.textContent = theme==='dark' ? '🌙' : '☀️';
+    const segDark = document.getElementById('themeSegDark');
+    const segLight = document.getElementById('themeSegLight');
+    if(segDark && segLight){
+      segDark.classList.toggle('active', theme==='dark');
+      segLight.classList.toggle('active', theme==='light');
+    }
+    // recolorea la gráfica (usa colores CSS leídos en tiempo real)
+    if(document.getElementById('view-dashboard').classList.contains('active')) renderChart7();
+  }
+  function setTheme(theme){
+    settings.theme = theme;
+    save(DB_KEYS.settings, settings);
+    applyTheme(theme);
+  }
+  document.getElementById('themeToggleBtn').addEventListener('click', ()=>{
+    setTheme(settings.theme==='dark' ? 'light' : 'dark');
+  });
+  document.getElementById('themeSegDark').addEventListener('click', ()=>setTheme('dark'));
+  document.getElementById('themeSegLight').addEventListener('click', ()=>setTheme('light'));
+
+  /* ============== PIN DE SEGURIDAD ==============
+     Hash simple (no criptográfico) — suficiente como disuasivo local
+     de acceso casual, no como seguridad de nivel bancario. Se guarda
+     solo el hash, nunca el PIN en texto plano. */
+  function simpleHash(str){
+    let h = 5381;
+    for(let i=0;i<str.length;i++){ h = ((h*33) ^ str.charCodeAt(i)) >>> 0; }
+    return String(h);
+  }
+  let pinBuffer = '';
+  let pinFlow = null;
+  let pinTempFirst = '';
+
+  function updateLockDots(){
+    document.querySelectorAll('#lockDots .lock-dot').forEach((d,i)=>{
+      d.classList.toggle('filled', i < pinBuffer.length);
+      d.classList.remove('error');
+    });
+  }
+  function lockShakeError(msg){
+    toast(msg);
+    const dotsWrap = document.getElementById('lockDots');
+    document.querySelectorAll('#lockDots .lock-dot').forEach(d=>d.classList.add('error'));
+    dotsWrap.classList.add('lock-shake');
+    setTimeout(()=>{ dotsWrap.classList.remove('lock-shake'); pinBuffer=''; updateLockDots(); }, 350);
+  }
+  function showLockScreen(mode, subtitle){
+    pinFlow = mode; pinBuffer = '';
+    document.getElementById('lockSubtitle').textContent = subtitle || 'Ingresa tu PIN';
+    document.getElementById('lockCancelBtn').style.display = (mode==='unlock') ? 'none' : 'inline-block';
+    updateLockDots();
+    document.getElementById('lockScreen').style.display = 'flex';
+  }
+  function hideLockScreen(){
+    document.getElementById('lockScreen').style.display = 'none';
+    pinFlow = null; pinBuffer = ''; pinTempFirst = '';
+  }
+  document.getElementById('lockPad').addEventListener('click', (e)=>{
+    const btn = e.target.closest('button[data-key]');
+    if(!btn) return;
+    const key = btn.dataset.key;
+    if(key==='back'){ pinBuffer = pinBuffer.slice(0,-1); updateLockDots(); return; }
+    if(pinBuffer.length>=4) return;
+    pinBuffer += key;
+    updateLockDots();
+    if(pinBuffer.length===4){ setTimeout(handlePinComplete, 130); }
+  });
+  function handlePinComplete(){
+    if(pinFlow==='unlock'){
+      if(simpleHash(pinBuffer)===settings.pinHash){ hideLockScreen(); }
+      else{ lockShakeError('PIN incorrecto'); }
+    } else if(pinFlow==='setup1'){
+      pinTempFirst = pinBuffer; pinBuffer='';
+      pinFlow = 'setup2';
+      document.getElementById('lockSubtitle').textContent = 'Confirma tu nuevo PIN';
+      updateLockDots();
+    } else if(pinFlow==='setup2'){
+      if(pinBuffer===pinTempFirst){
+        settings.pinHash = simpleHash(pinBuffer);
+        settings.pinEnabled = true;
+        save(DB_KEYS.settings, settings);
+        hideLockScreen();
+        document.getElementById('pinToggle').checked = true;
+        document.getElementById('changePinRow').style.display = '';
+        toast('PIN activado ✓');
+      } else {
+        pinTempFirst=''; pinBuffer='';
+        pinFlow = 'setup1';
+        document.getElementById('lockSubtitle').textContent = 'No coincide. Crea tu PIN de nuevo';
+        updateLockDots();
+      }
+    } else if(pinFlow==='changeOld'){
+      if(simpleHash(pinBuffer)===settings.pinHash){
+        pinBuffer=''; pinFlow='setup1';
+        document.getElementById('lockSubtitle').textContent = 'Crea tu nuevo PIN';
+        updateLockDots();
+      } else { lockShakeError('PIN actual incorrecto'); }
+    } else if(pinFlow==='disable'){
+      if(simpleHash(pinBuffer)===settings.pinHash){
+        settings.pinEnabled = false; settings.pinHash = null;
+        save(DB_KEYS.settings, settings);
+        hideLockScreen();
+        document.getElementById('pinToggle').checked = false;
+        document.getElementById('changePinRow').style.display = 'none';
+        toast('PIN desactivado');
+      } else { lockShakeError('PIN incorrecto'); }
+    }
+  }
+  document.getElementById('lockCancelBtn').addEventListener('click', ()=>{
+    hideLockScreen();
+    document.getElementById('pinToggle').checked = settings.pinEnabled;
+  });
+  document.getElementById('pinToggle').addEventListener('change', (e)=>{
+    if(e.target.checked){
+      showLockScreen('setup1', 'Crea tu nuevo PIN');
+    } else {
+      e.target.checked = true;
+      showLockScreen('disable', 'Ingresa tu PIN actual para desactivar');
+    }
+  });
+  document.getElementById('changePinBtn').addEventListener('click', ()=>{
+    showLockScreen('changeOld', 'Ingresa tu PIN actual');
+  });
+
+  /* ============== REPORTES: CSV E IMPRESIÓN/PDF ==============
+     En vez de depender de librerías externas (que requerirían internet
+     o inflar mucho el archivo), se exporta CSV — que Excel y Google
+     Sheets abren igual de bien — y se ofrece un reporte imprimible
+     que usa el diálogo nativo del navegador para "Guardar como PDF",
+     sin depender de conexión ni de ninguna librería. */
+  function csvEscape(val){
+    const s = String(val==null ? '' : val);
+    if(/[",\n]/.test(s)) return '"' + s.replace(/"/g,'""') + '"';
+    return s;
+  }
+  document.getElementById('exportCsvBtn').addEventListener('click', ()=>{
+    const rows = [['Fecha','Tipo','Descripción','Categoría/Servicio','Método de pago','Monto']];
+    [...income].sort((a,b)=>new Date(a.date)-new Date(b.date)).forEach(t=>{
+      rows.push([new Date(t.date).toLocaleString('es'), 'Ingreso', t.serviceName, '', t.payment, Number(t.price).toFixed(2)]);
+    });
+    [...expenses].sort((a,b)=>new Date(a.date)-new Date(b.date)).forEach(t=>{
+      rows.push([new Date(t.date).toLocaleString('es'), 'Gasto', t.description, t.category, t.payment, '-'+Number(t.amount).toFixed(2)]);
+    });
+    const csv = rows.map(r=>r.map(csvEscape).join(',')).join('\r\n');
+    const blob = new Blob(['\ufeff'+csv], {type:'text/csv;charset=utf-8;'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = `aure-barbershop-movimientos-${new Date().toISOString().slice(0,10)}.csv`;
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    toast('CSV descargado ✓ (ábrelo con Excel o Sheets)');
+  });
+
+  document.getElementById('printReportBtn').addEventListener('click', ()=>{
+    const start = startOfRange('month');
+    const inc = income.filter(t=>new Date(t.date) >= start).sort((a,b)=>new Date(a.date)-new Date(b.date));
+    const exp = expenses.filter(t=>new Date(t.date) >= start).sort((a,b)=>new Date(a.date)-new Date(b.date));
+    const totalInc = inc.reduce((a,b)=>a+Number(b.price),0);
+    const totalExp = exp.reduce((a,b)=>a+Number(b.amount),0);
+    const monthLabel = new Date().toLocaleDateString('es', {month:'long', year:'numeric'});
+    const win = window.open('', '_blank');
+    if(!win){ toast('El navegador bloqueó la ventana. Habilita ventanas emergentes.'); return; }
+    const rowsHtml = (list, isIncome) => list.map(t=>`<tr>
+        <td>${new Date(t.date).toLocaleDateString('es')}</td>
+        <td>${escapeHtml(isIncome ? t.serviceName : t.description)}</td>
+        <td>${escapeHtml(isIncome ? '—' : t.category)}</td>
+        <td>${escapeHtml(t.payment)}</td>
+        <td style="text-align:right;">${isIncome?'':'-'}${money(isIncome?t.price:t.amount)}</td>
+      </tr>`).join('');
+    win.document.write(`<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8">
+      <title>Reporte Aure Barbershop — ${monthLabel}</title>
+      <style>
+        body{ font-family:Georgia, serif; color:#1a1a1a; padding:32px; max-width:760px; margin:0 auto; }
+        h1{ font-size:22px; margin-bottom:2px; } h2{ font-size:14px; color:#555; font-weight:normal; margin-top:0; }
+        table{ width:100%; border-collapse:collapse; margin-top:18px; font-size:13px; }
+        th,td{ padding:7px 8px; border-bottom:1px solid #ddd; text-align:left; }
+        th{ background:#f2f2f2; text-transform:uppercase; font-size:11px; letter-spacing:.05em; }
+        .totals{ margin-top:20px; font-size:14px; }
+        .totals div{ display:flex; justify-content:space-between; max-width:320px; padding:4px 0; }
+        .totals .net{ font-weight:bold; border-top:1px solid #999; margin-top:6px; padding-top:8px; }
+        @media print{ button{ display:none; } }
+      </style></head><body>
+      <h1>Aure Barbershop</h1>
+      <h2>Reporte de movimientos — ${monthLabel.charAt(0).toUpperCase()+monthLabel.slice(1)}</h2>
+      <button onclick="window.print()" style="padding:8px 16px; margin-bottom:10px;">Imprimir / Guardar como PDF</button>
+      <h3>Ingresos</h3>
+      <table><thead><tr><th>Fecha</th><th>Servicio</th><th>Categoría</th><th>Pago</th><th style="text-align:right;">Monto</th></tr></thead>
+      <tbody>${rowsHtml(inc, true) || '<tr><td colspan="5">Sin ingresos este mes</td></tr>'}</tbody></table>
+      <h3>Gastos</h3>
+      <table><thead><tr><th>Fecha</th><th>Descripción</th><th>Categoría</th><th>Pago</th><th style="text-align:right;">Monto</th></tr></thead>
+      <tbody>${rowsHtml(exp, false) || '<tr><td colspan="5">Sin gastos este mes</td></tr>'}</tbody></table>
+      <div class="totals">
+        <div><span>Total ingresos</span><span>${money(totalInc)}</span></div>
+        <div><span>Total gastos</span><span>${money(totalExp)}</span></div>
+        <div class="net"><span>Ganancia neta</span><span>${money(totalInc-totalExp)}</span></div>
+      </div>
+      </body></html>`);
+    win.document.close();
+  });
+
+  /* ============== INIT ============== */
+  loadLogo();
+  applyTheme(settings.theme || 'dark');
+  renderCategorySelect();
+  document.getElementById('incomeDate').value = todayLocalInput();
+  document.getElementById('expenseDate').value = todayLocalInput();
+  updateLastBackupText();
+  checkReminder();
+  renderDashboard();
+  document.getElementById('pinToggle').checked = !!settings.pinEnabled;
+  document.getElementById('changePinRow').style.display = settings.pinEnabled ? '' : 'none';
+  if(settings.pinEnabled && settings.pinHash){
+    showLockScreen('unlock', 'Ingresa tu PIN');
+  }
+
+  // Registro del Service Worker: solo funciona bajo HTTPS (ej. GitHub Pages).
+  // Si se abre el archivo local (file://) o el navegador no lo soporta,
+  // esto falla en silencio y la app sigue funcionando normal, sin caché offline extra.
+  if('serviceWorker' in navigator && location.protocol==='https:'){
+    window.addEventListener('load', ()=>{
+      navigator.serviceWorker.register('sw.js').catch(()=>{});
+    });
+  }
+
+})();
+</script>
+</body>
+</html>
