@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, viewport-fit=cover">
 <title>Aure Barbershop — Contabilidad</title>
-<meta name="theme-color" content="#0e1c22">
+<meta name="theme-color" content="#0f1214">
 <meta name="description" content="Contabilidad diaria, insumos y caja para Aure Barbershop">
 
 <!-- PWA: si estos archivos no están presentes (ej. abierto como file:// local),
@@ -27,20 +27,20 @@
    como un libro de cuentas.
    ========================================================= */
 :root, html[data-theme="dark"]{
-  --bg:#0e1c22;
-  --surface:#15272e;
-  --surface-2:#1c343c;
-  --surface-3:#243f47;
-  --border:#2c454d;
-  --gold:#c17a4f;
-  --gold-bright:#e0996b;
-  --red:#a34438;
-  --red-bright:#c65f4f;
-  --green:#4f8f7c;
-  --green-bright:#71b39e;
-  --cream:#eef3f2;
-  --muted:#93a8ab;
-  --muted-2:#5f767a;
+  --bg:#0f1214;
+  --surface:#171b1e;
+  --surface-2:#1e2327;
+  --surface-3:#262c31;
+  --border:#31383d;
+  --gold:#18a878;
+  --gold-bright:#2ec98f;
+  --red:#b3413a;
+  --red-bright:#d1594f;
+  --green:#2fae7d;
+  --green-bright:#4fc99a;
+  --cream:#eef1f0;
+  --muted:#8b9a97;
+  --muted-2:#57635f;
   --radius:10px;
   --font-display:'Aure Display', Georgia, 'Times New Roman', serif;
   --font-body:'Aure Body', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -48,18 +48,18 @@
 }
 
 html[data-theme="light"]{
-  --bg:#eef3f2;
+  --bg:#f3f5f4;
   --surface:#ffffff;
-  --surface-2:#e7eeed;
-  --surface-3:#dbe4e3;
-  --border:#cdd8d7;
-  --gold:#a8623a;
-  --gold-bright:#c17a4f;
-  --red:#a13f2f;
-  --red-bright:#b1503f;
-  --green:#3d7a67;
-  --green-bright:#4f8f7c;
-  --cream:#12262c;
+  --surface-2:#eceeed;
+  --surface-3:#dfe3e1;
+  --border:#d3d8d6;
+  --gold:#0f7a57;
+  --gold-bright:#159a6b;
+  --red:#a13327;
+  --red-bright:#b3413a;
+  --green:#147a53;
+  --green-bright:#1f9d6b;
+  --cream:#10201c;
   --muted:#4c6165;
   --muted-2:#7c9195;
 }
@@ -86,8 +86,8 @@ body::before{
   position:fixed; inset:0;
   pointer-events:none;
   background-image:
-    radial-gradient(circle at 20% 10%, rgba(193,122,79,0.05), transparent 40%),
-    radial-gradient(circle at 80% 90%, rgba(163,68,56,0.04), transparent 45%);
+    radial-gradient(circle at 20% 10%, rgba(24,168,120,0.05), transparent 40%),
+    radial-gradient(circle at 80% 90%, rgba(179,65,58,0.04), transparent 45%);
   z-index:0;
 }
 h1,h2,h3{ font-family:var(--font-display); font-weight:700; margin:0; letter-spacing:0.01em; }
@@ -136,11 +136,11 @@ button{ font-family:inherit; }
 }
 .theme-seg button.active{ background:var(--gold); border-color:var(--gold); color:#221a10; font-weight:700; }
 
-/* ---------- Pantalla de bloqueo (PIN) ---------- */
+/* ---------- Pantalla de inicio de sesión ---------- */
 .lock-screen{
   position:fixed; inset:0; z-index:200; background:var(--bg);
   display:flex; flex-direction:column; align-items:center; justify-content:center;
-  padding:24px; text-align:center;
+  padding:24px; text-align:center; overflow-y:auto;
 }
 .lock-mark{
   width:64px; height:64px; border-radius:50%; margin-bottom:16px;
@@ -149,20 +149,17 @@ button{ font-family:inherit; }
 }
 .lock-title{ font-size:20px; color:var(--cream); margin-bottom:4px; }
 .lock-subtitle{ font-size:13px; color:var(--muted); margin:0 0 22px; }
-.lock-dots{ display:flex; gap:14px; margin-bottom:30px; }
-.lock-dot{
-  width:14px; height:14px; border-radius:50%; border:1.5px solid var(--muted-2); background:transparent; transition:all .15s;
+.login-form{ width:100%; max-width:300px; text-align:left; }
+.login-form .form-group{ margin-bottom:14px; }
+.password-wrap{ position:relative; }
+.password-wrap input{ padding-right:42px; }
+.password-toggle{
+  position:absolute; right:6px; top:50%; transform:translateY(-50%);
+  width:32px; height:32px; border-radius:6px; border:none; background:none; color:var(--muted);
+  display:flex; align-items:center; justify-content:center; cursor:pointer;
 }
-.lock-dot.filled{ background:var(--gold); border-color:var(--gold); }
-.lock-dot.error{ background:var(--red-bright); border-color:var(--red-bright); }
-.lock-pad{
-  display:grid; grid-template-columns:repeat(3, 68px); gap:14px; justify-content:center;
-}
-.lock-pad button{
-  width:68px; height:68px; border-radius:50%; border:1px solid var(--border);
-  background:var(--surface-2); color:var(--cream); font-size:22px; cursor:pointer;
-}
-.lock-pad button:active{ background:var(--surface-3); }
+.lock-hint{ font-size:12px; color:var(--muted-2); margin-top:16px; max-width:300px; }
+.login-form.error .form-control{ border-color:var(--red-bright); }
 .lock-shake{ animation:shake .3s; }
 @keyframes shake{ 10%,90%{transform:translateX(-3px);} 20%,80%{transform:translateX(5px);} 30%,50%,70%{transform:translateX(-8px);} 40%,60%{transform:translateX(8px);} }
 .header-stripe{
@@ -200,7 +197,7 @@ button{ font-family:inherit; }
   background-position:top center;
   background-repeat:repeat-x;
 }
-.receipt.tone-gold{ border-color:rgba(193,122,79,.35); }
+.receipt.tone-gold{ border-color:rgba(24,168,120,.35); }
 
 /* Dashboard hero totals */
 .totals-card{
@@ -258,8 +255,8 @@ button{ font-family:inherit; }
   width:36px; height:36px; border-radius:50%; flex-shrink:0;
   display:flex; align-items:center; justify-content:center; font-size:16px;
 }
-.tx-icon.income{ background:rgba(79,143,124,.18); color:var(--green-bright); }
-.tx-icon.expense{ background:rgba(163,68,56,.2); color:var(--red-bright); }
+.tx-icon.income{ background:rgba(47,174,125,.18); color:var(--green-bright); }
+.tx-icon.expense{ background:rgba(179,65,58,.2); color:var(--red-bright); }
 .tx-body{ flex:1; min-width:0; }
 .tx-title{ font-size:14.5px; font-weight:600; color:var(--cream); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
 .tx-meta{ font-size:11.5px; color:var(--muted-2); margin-top:2px; }
@@ -313,7 +310,8 @@ select.form-control{ appearance:none; -webkit-appearance:none; background-image:
   padding:12px 10px; border-radius:8px; border:1px solid var(--border); background:var(--surface-2);
   cursor:pointer; text-align:left;
 }
-.service-pick .svc.active{ border-color:var(--gold); background:rgba(193,122,79,.13); }
+.service-pick .svc.active{ border-color:var(--gold); background:rgba(24,168,120,.13); }
+.service-pick .svc.disabled{ opacity:.45; cursor:not-allowed; }
 .service-pick .svc .n{ font-size:13.5px; font-weight:600; color:var(--cream); display:block; margin-bottom:3px;}
 .service-pick .svc .p{ font-size:13px; color:var(--gold-bright); font-family:var(--font-mono);}
 
@@ -327,7 +325,7 @@ select.form-control{ appearance:none; -webkit-appearance:none; background-image:
   width:100%; padding:13px; border-radius:8px; border:1px solid var(--border);
   background:transparent; color:var(--cream); font-size:14px; cursor:pointer; margin-top:8px;
 }
-.btn-danger{ color:var(--red-bright); border-color:rgba(163,68,56,.4); }
+.btn-danger{ color:var(--red-bright); border-color:rgba(179,65,58,.4); }
 
 /* Servicios (catálogo) */
 .svc-row{
@@ -358,7 +356,7 @@ input[type=file]{ display:none; }
 .switch input{ opacity:0; width:0; height:0; }
 .slider{ position:absolute; cursor:pointer; inset:0; background:var(--surface-3); border:1px solid var(--border); border-radius:20px; transition:.2s;}
 .slider::before{ content:''; position:absolute; height:17px; width:17px; left:3px; top:3px; background:var(--muted); border-radius:50%; transition:.2s;}
-input:checked + .slider{ background:rgba(193,122,79,.35); border-color:var(--gold);}
+input:checked + .slider{ background:rgba(24,168,120,.35); border-color:var(--gold);}
 input:checked + .slider::before{ transform:translateX(19px); background:var(--gold-bright);}
 
 /* Modal */
@@ -391,7 +389,7 @@ input:checked + .slider::before{ transform:translateX(19px); background:var(--go
 /* Banner recordatorio */
 .reminder-banner{
   margin:0 20px 4px; padding:12px 14px; border-radius:10px;
-  background:rgba(163,68,56,.14); border:1px solid rgba(163,68,56,.4);
+  background:rgba(179,65,58,.14); border:1px solid rgba(179,65,58,.4);
   display:none; align-items:center; gap:10px; font-size:12.5px; color:#e3b7ab;
 }
 .reminder-banner.show{ display:flex; }
@@ -413,6 +411,15 @@ input:checked + .slider::before{ transform:translateX(19px); background:var(--go
 .nav-btn .ic{ font-size:17px; line-height:1; }
 .nav-btn.active{ color:var(--gold-bright); }
 .nav-btn.accent .ic{ color:var(--gold-bright); font-weight:700; }
+.nav-btn .ic svg{ display:block; }
+.more-sheet-grid{ display:grid; grid-template-columns:repeat(3, 1fr); gap:10px; }
+.more-sheet-item{
+  display:flex; flex-direction:column; align-items:center; gap:8px;
+  padding:16px 8px; border-radius:12px; border:1px solid var(--border);
+  background:var(--surface-2); color:var(--cream); cursor:pointer; font-size:12.5px;
+}
+.more-sheet-item .ic{ color:var(--gold-bright); }
+.more-sheet-item:active{ background:var(--surface-3); }
 
 /* Catálogo: sub-tabs, insumos, stock */
 .subtab-panel{ animation:fadein .15s ease; }
@@ -423,11 +430,36 @@ input:checked + .slider::before{ transform:translateX(19px); background:var(--go
 .insumo-row .info{ flex:1; min-width:0; }
 .insumo-row .name{ font-size:14.5px; font-weight:600; display:flex; align-items:center; gap:6px; flex-wrap:wrap;}
 .insumo-row .meta{ font-size:12px; color:var(--muted-2); margin-top:2px; font-family:var(--font-mono); }
+
+/* ---------- Citas ---------- */
+.cita-row{
+  display:flex; align-items:flex-start; gap:12px; padding:13px 0; border-bottom:1px dashed var(--border);
+}
+.cita-row:last-child{ border-bottom:none; }
+.cita-time{
+  flex-shrink:0; width:58px; text-align:center; padding-top:2px;
+}
+.cita-time .d{ font-size:11px; color:var(--muted-2); text-transform:uppercase; }
+.cita-time .t{ font-size:14px; font-weight:700; color:var(--gold-bright); font-family:var(--font-mono); }
+.cita-body{ flex:1; min-width:0; }
+.cita-body .name{ font-size:14.5px; font-weight:600; color:var(--cream); }
+.cita-body .meta{ font-size:12px; color:var(--muted-2); margin-top:2px; }
+.cita-status{
+  display:inline-block; font-size:10px; font-weight:700; padding:2px 9px; border-radius:10px; margin-top:5px;
+  text-transform:uppercase; letter-spacing:.04em;
+}
+.cita-status.pendiente{ background:rgba(24,168,120,.15); color:var(--gold-bright); }
+.cita-status.confirmada{ background:rgba(47,174,125,.18); color:var(--green-bright); }
+.cita-status.completada{ background:var(--surface-3); color:var(--muted); }
+.cita-status.cancelada{ background:rgba(179,65,58,.18); color:var(--red-bright); }
+.cita-hoy-row{ display:flex; align-items:center; gap:10px; padding:8px 0; border-bottom:1px dashed var(--border); font-size:13px; }
+.cita-hoy-row:last-child{ border-bottom:none; }
+.cita-hoy-row .t{ font-family:var(--font-mono); color:var(--gold-bright); font-weight:700; flex-shrink:0; width:48px; }
 .stock-badge{
   font-size:10px; padding:2px 8px; border-radius:10px; font-weight:700;
-  background:rgba(79,143,124,.18); color:var(--green-bright);
+  background:rgba(47,174,125,.18); color:var(--green-bright);
 }
-.stock-badge.low{ background:rgba(163,68,56,.22); color:var(--red-bright); }
+.stock-badge.low{ background:rgba(179,65,58,.22); color:var(--red-bright); }
 .stepper{ display:flex; align-items:center; gap:4px; }
 .stepper button{
   width:26px; height:26px; border-radius:6px; border:1px solid var(--border); background:var(--surface-2);
@@ -482,7 +514,7 @@ input:checked + .slider::before{ transform:translateX(19px); background:var(--go
     transition:background .15s;
   }
   .nav-btn:hover{ background:var(--surface-2); color:var(--cream); }
-  .nav-btn.active{ background:rgba(193,122,79,.12); }
+  .nav-btn.active{ background:rgba(24,168,120,.12); }
   .nav-btn .ic{ font-size:23px; }
 
   .app{
@@ -508,25 +540,29 @@ input:checked + .slider::before{ transform:translateX(19px); background:var(--go
 <div id="lockScreen" class="lock-screen" style="display:none;">
   <div class="lock-mark" id="lockBrandMark"></div>
   <h1 class="lock-title">Aure Barbershop</h1>
-  <p class="lock-subtitle" id="lockSubtitle">Ingresa tu PIN</p>
-  <div class="lock-dots" id="lockDots">
-    <span class="lock-dot"></span><span class="lock-dot"></span><span class="lock-dot"></span><span class="lock-dot"></span>
-  </div>
-  <div class="lock-pad" id="lockPad">
-    <button type="button" data-key="1">1</button>
-    <button type="button" data-key="2">2</button>
-    <button type="button" data-key="3">3</button>
-    <button type="button" data-key="4">4</button>
-    <button type="button" data-key="5">5</button>
-    <button type="button" data-key="6">6</button>
-    <button type="button" data-key="7">7</button>
-    <button type="button" data-key="8">8</button>
-    <button type="button" data-key="9">9</button>
-    <span></span>
-    <button type="button" data-key="0">0</button>
-    <button type="button" data-key="back">⌫</button>
-  </div>
-  <button type="button" id="lockCancelBtn" class="btn-secondary" style="margin-top:22px; max-width:200px; display:none;">Cancelar</button>
+  <p class="lock-subtitle" id="lockSubtitle">Ingresa tus credenciales</p>
+
+  <form id="loginForm" class="login-form" autocomplete="off">
+    <div class="form-group">
+      <label>Usuario</label>
+      <input type="text" class="form-control" id="loginUsername" placeholder="Ej. admin" autocomplete="username">
+    </div>
+    <div class="form-group">
+      <label>Contraseña</label>
+      <div class="password-wrap">
+        <input type="password" class="form-control" id="loginPassword" placeholder="••••••••" autocomplete="current-password">
+        <button type="button" class="password-toggle" id="loginPassToggle" data-icon="eye" data-icon-size="18" aria-label="Mostrar contraseña"></button>
+      </div>
+    </div>
+    <div class="form-group" id="loginConfirmGroup" style="display:none;">
+      <label>Confirmar contraseña</label>
+      <input type="password" class="form-control" id="loginPasswordConfirm" placeholder="••••••••" autocomplete="new-password">
+    </div>
+    <button type="submit" class="btn-primary" id="loginSubmitBtn">Iniciar sesión</button>
+    <button type="button" id="forgotPasswordBtn" class="link" style="display:block; margin:12px auto 0; text-align:center;">¿Olvidaste tu contraseña?</button>
+    <button type="button" id="lockCancelBtn" class="btn-secondary" style="display:none;">Cancelar</button>
+  </form>
+  <p class="lock-hint" id="lockHint"></p>
 </div>
 
 <div class="app">
@@ -540,13 +576,18 @@ input:checked + .slider::before{ transform:translateX(19px); background:var(--go
         <span>Libro de cuentas</span>
       </div>
     </div>
-    <button type="button" class="theme-toggle" id="themeToggleBtn" title="Cambiar tema" aria-label="Alternar tema claro/oscuro">🌙</button>
+    <button type="button" class="theme-toggle" id="themeToggleBtn" title="Cambiar tema" aria-label="Alternar tema claro/oscuro"><span class="ic" data-icon="moon" data-icon-size="17"></span></button>
   </div>
   <div class="header-stripe"></div>
 
   <div id="reminderBanner" class="reminder-banner">
     <span id="reminderText">Han pasado varios días desde tu último respaldo.</span>
     <button id="reminderBackupBtn">Respaldar</button>
+  </div>
+
+  <div id="defaultPassBanner" class="reminder-banner" style="display:none;">
+    <span>Estás usando el usuario y contraseña de fábrica (admin / admin1234). Cámbialos cuanto antes.</span>
+    <button data-goto="ajustes" id="goChangePassBtn">Cambiar</button>
   </div>
 
   <!-- ================= DASHBOARD ================= -->
@@ -560,38 +601,46 @@ input:checked + .slider::before{ transform:translateX(19px); background:var(--go
       </div>
       <div class="totals-grid">
         <div>
-          <div class="stat-label">Ingresos</div>
+          <div class="stat-label"><span class="ic" data-icon="trendUp" data-icon-size="12" style="display:inline-flex; vertical-align:-1px; margin-right:4px; color:var(--green-bright);"></span>Ingresos</div>
           <div class="stat-value income num" id="statIncome">$0.00</div>
         </div>
         <div>
-          <div class="stat-label">Gastos</div>
+          <div class="stat-label"><span class="ic" data-icon="trendDown" data-icon-size="12" style="display:inline-flex; vertical-align:-1px; margin-right:4px; color:var(--red-bright);"></span>Gastos</div>
           <div class="stat-value expense num" id="statExpense">$0.00</div>
         </div>
         <div class="full">
           <hr class="divider-dashed">
-          <div class="stat-label">Margen bruto (ventas − costo insumos)</div>
+          <div class="stat-label"><span class="ic" data-icon="chart" data-icon-size="12" style="display:inline-flex; vertical-align:-1px; margin-right:4px;"></span>Margen bruto (ventas − costo insumos)</div>
           <div class="stat-value margin num" id="statMargin">$0.00</div>
         </div>
         <div class="full">
           <hr class="divider-dashed">
-          <div class="stat-label">Ganancia neta</div>
+          <div class="stat-label"><span class="ic" data-icon="bag" data-icon-size="12" style="display:inline-flex; vertical-align:-1px; margin-right:4px;"></span>Ganancia neta</div>
           <div class="stat-value profit num" id="statProfit">$0.00</div>
         </div>
       </div>
     </div>
 
-    <button type="button" class="btn-secondary" id="closeCashBtn" style="margin-bottom:14px;">🔒 Cerrar caja de hoy</button>
+    <div class="receipt" id="citasHoyCard" style="display:none;">
+      <div class="section-title" style="margin:0 0 8px;">
+        <h2 style="display:flex; align-items:center; gap:7px;"><span class="ic" data-icon="calendar" data-icon-size="16"></span>Citas de hoy</h2>
+        <button class="link" data-goto="citas">Ver agenda</button>
+      </div>
+      <div id="citasHoyList"></div>
+    </div>
+
+    <button type="button" class="btn-secondary" id="closeCashBtn" style="margin-bottom:14px;"><span class="ic" data-icon="lock" data-icon-size="15" style="display:inline-flex; vertical-align:-3px; margin-right:6px;"></span>Cerrar caja de hoy</button>
 
     <div class="badge-top-service" id="topServiceBadge">
-      <div class="icon">✂️</div>
+      <div class="icon" data-icon="scissors" data-icon-size="20"></div>
       <div>
         <div class="lbl">Servicio más vendido (mes)</div>
         <div class="val" id="topServiceVal">Aún no hay datos</div>
       </div>
     </div>
 
-    <div class="badge-top-service" id="lowStockBadge" style="display:none; border-color:rgba(163,68,56,.4); background:rgba(163,68,56,.1); cursor:pointer;">
-      <div class="icon">⚠️</div>
+    <div class="badge-top-service" id="lowStockBadge" style="display:none; border-color:rgba(179,65,58,.4); background:rgba(179,65,58,.1); cursor:pointer;">
+      <div class="icon" data-icon="alert" data-icon-size="20"></div>
       <div>
         <div class="lbl">Insumos con stock bajo</div>
         <div class="val" id="lowStockVal" style="color:var(--red-bright);">—</div>
@@ -617,11 +666,24 @@ input:checked + .slider::before{ transform:translateX(19px); background:var(--go
 
   <!-- ================= REGISTRAR INGRESO ================= -->
   <section id="view-ingreso" class="view">
-    <div class="section-title"><h2>Registrar ingreso</h2></div>
+    <div class="section-title"><h2>Registrar venta</h2></div>
 
     <div class="form-group">
+      <label>Tipo de venta</label>
+      <div class="pay-method-group" id="saleTypeGroup">
+        <button type="button" data-val="servicio" class="active"><span class="ic" data-icon="scissors" data-icon-size="16" style="display:inline-flex; vertical-align:-3px; margin-right:5px;"></span>Servicio</button>
+        <button type="button" data-val="producto"><span class="ic" data-icon="bag" data-icon-size="16" style="display:inline-flex; vertical-align:-3px; margin-right:5px;"></span>Producto</button>
+      </div>
+    </div>
+
+    <div class="form-group" id="servicePickGroup">
       <label>Servicio</label>
       <div class="service-pick" id="servicePick"></div>
+    </div>
+
+    <div class="form-group" id="productPickGroup" style="display:none;">
+      <label>Producto</label>
+      <div class="service-pick" id="productPick"></div>
     </div>
 
     <div class="form-group">
@@ -635,8 +697,8 @@ input:checked + .slider::before{ transform:translateX(19px); background:var(--go
     <div class="form-group">
       <label>Método de pago</label>
       <div class="pay-method-group" id="incomePayGroup">
-        <button data-val="Efectivo" class="active">💵 Efectivo</button>
-        <button data-val="Tarjeta">💳 Tarjeta</button>
+        <button type="button" data-val="Efectivo" class="active"><span class="ic" data-icon="cash" data-icon-size="15" style="display:inline-flex; vertical-align:-3px; margin-right:5px;"></span>Efectivo</button>
+        <button type="button" data-val="Tarjeta"><span class="ic" data-icon="card" data-icon-size="15" style="display:inline-flex; vertical-align:-3px; margin-right:5px;"></span>Tarjeta</button>
       </div>
     </div>
 
@@ -647,10 +709,10 @@ input:checked + .slider::before{ transform:translateX(19px); background:var(--go
 
     <div class="form-group">
       <label>Nota (opcional)</label>
-      <input type="text" class="form-control" id="incomeNote" placeholder="Ej. Cliente frecuente">
+      <input type="text" class="form-control" id="incomeNote" placeholder="Ej. Cliente frecuente, referido por...">
     </div>
 
-    <button class="btn-primary" id="saveIncomeBtn">Guardar ingreso</button>
+    <button class="btn-primary" id="saveIncomeBtn">Guardar venta</button>
   </section>
 
   <!-- ================= REGISTRAR GASTO ================= -->
@@ -690,8 +752,8 @@ input:checked + .slider::before{ transform:translateX(19px); background:var(--go
     <div class="form-group">
       <label>Método de pago</label>
       <div class="pay-method-group" id="expensePayGroup">
-        <button data-val="Efectivo" class="active">💵 Efectivo</button>
-        <button data-val="Tarjeta">💳 Tarjeta</button>
+        <button type="button" data-val="Efectivo" class="active"><span class="ic" data-icon="cash" data-icon-size="15" style="display:inline-flex; vertical-align:-3px; margin-right:5px;"></span>Efectivo</button>
+        <button type="button" data-val="Tarjeta"><span class="ic" data-icon="card" data-icon-size="15" style="display:inline-flex; vertical-align:-3px; margin-right:5px;"></span>Tarjeta</button>
       </div>
     </div>
 
@@ -711,7 +773,7 @@ input:checked + .slider::before{ transform:translateX(19px); background:var(--go
       <button class="chip active" data-filter="all">Todo</button>
       <button class="chip" data-filter="income">Ingresos</button>
       <button class="chip" data-filter="expense">Gastos</button>
-      <button class="chip" data-filter="cierres">🔒 Cierres</button>
+      <button class="chip" data-filter="cierres"><span class="ic" data-icon="lock" data-icon-size="13" style="display:inline-flex; vertical-align:-2px; margin-right:4px;"></span>Cierres</button>
     </div>
     <div class="form-group" id="historyDateGroup">
       <input type="date" class="form-control" id="historyDate">
@@ -720,15 +782,33 @@ input:checked + .slider::before{ transform:translateX(19px); background:var(--go
     <div class="receipt" id="historyList"></div>
   </section>
 
+  <!-- ================= CITAS ================= -->
+  <section id="view-citas" class="view">
+    <div class="section-title">
+      <h2>Citas</h2>
+      <button class="link" id="addCitaBtn">+ Nueva</button>
+    </div>
+
+    <div class="filter-row">
+      <button class="chip active" data-cita-filter="proximas">Próximas</button>
+      <button class="chip" data-cita-filter="hoy">Hoy</button>
+      <button class="chip" data-cita-filter="completadas">Completadas</button>
+      <button class="chip" data-cita-filter="todas">Todas</button>
+    </div>
+
+    <div class="receipt" id="citasList"></div>
+  </section>
+
   <!-- ================= CATÁLOGO (Servicios / Insumos / Categorías) ================= -->
   <section id="view-catalogo" class="view">
     <div class="section-title"><h2>Catálogo</h2></div>
 
     <div class="filter-row">
-      <button class="chip active" data-subtab="servicios">✂️ Servicios</button>
-      <button class="chip" data-subtab="insumos">🧴 Insumos</button>
-      <button class="chip" data-subtab="categorias">🏷️ Categorías</button>
-      <button class="chip" data-subtab="unidades">📏 Unidades</button>
+      <button class="chip active" data-subtab="servicios"><span class="ic" data-icon="scissors" data-icon-size="13" style="display:inline-flex; vertical-align:-2px; margin-right:4px;"></span>Servicios</button>
+      <button class="chip" data-subtab="productos"><span class="ic" data-icon="bag" data-icon-size="13" style="display:inline-flex; vertical-align:-2px; margin-right:4px;"></span>Productos</button>
+      <button class="chip" data-subtab="insumos"><span class="ic" data-icon="droplet" data-icon-size="13" style="display:inline-flex; vertical-align:-2px; margin-right:4px;"></span>Insumos</button>
+      <button class="chip" data-subtab="categorias"><span class="ic" data-icon="tag" data-icon-size="13" style="display:inline-flex; vertical-align:-2px; margin-right:4px;"></span>Categorías</button>
+      <button class="chip" data-subtab="unidades"><span class="ic" data-icon="ruler" data-icon-size="13" style="display:inline-flex; vertical-align:-2px; margin-right:4px;"></span>Unidades</button>
     </div>
 
     <!-- Servicios -->
@@ -738,6 +818,15 @@ input:checked + .slider::before{ transform:translateX(19px); background:var(--go
         <button class="link" id="addServiceBtn">+ Nuevo</button>
       </div>
       <div class="receipt" id="serviceList"></div>
+    </div>
+
+    <!-- Productos -->
+    <div class="subtab-panel" id="panel-productos" style="display:none;">
+      <div class="section-title" style="margin-top:6px;">
+        <h2>Productos en venta</h2>
+        <button class="link" id="addProductBtn">+ Nuevo</button>
+      </div>
+      <div class="receipt" id="productList"></div>
     </div>
 
     <!-- Insumos -->
@@ -778,8 +867,8 @@ input:checked + .slider::before{ transform:translateX(19px); background:var(--go
           <div class="d">Elige cómo se ve la app</div>
         </div>
         <div class="theme-seg">
-          <button type="button" id="themeSegDark" class="active">🌙 Oscuro</button>
-          <button type="button" id="themeSegLight">☀️ Claro</button>
+          <button type="button" id="themeSegDark" class="active"><span class="ic" data-icon="moon" data-icon-size="13" style="display:inline-flex; vertical-align:-2px; margin-right:4px;"></span>Oscuro</button>
+          <button type="button" id="themeSegLight"><span class="ic" data-icon="sun" data-icon-size="13" style="display:inline-flex; vertical-align:-2px; margin-right:4px;"></span>Claro</button>
         </div>
       </div>
     </div>
@@ -793,7 +882,7 @@ input:checked + .slider::before{ transform:translateX(19px); background:var(--go
         </div>
         <div class="row-actions">
           <button class="icon-btn" id="changeLogoBtn" aria-label="Cambiar logo">⬆</button>
-          <button class="icon-btn" id="removeLogoBtn" aria-label="Quitar logo">✕</button>
+          <button class="icon-btn" id="removeLogoBtn" aria-label="Quitar logo" data-icon="close" data-icon-size="14"></button>
         </div>
       </div>
     </div>
@@ -849,26 +938,37 @@ input:checked + .slider::before{ transform:translateX(19px); background:var(--go
       </div>
     </div>
 
-    <div class="section-title"><h2>Seguridad</h2></div>
+    <div class="section-title"><h2>Cuenta</h2></div>
     <div class="receipt">
       <div class="settings-item">
         <div>
-          <div class="t">Bloquear con PIN</div>
-          <div class="d">Pide un PIN de 4 dígitos al abrir la app</div>
+          <div class="t">Usuario</div>
+          <div class="d" id="accountUsernameDisplay">—</div>
         </div>
-        <label class="switch">
-          <input type="checkbox" id="pinToggle">
-          <span class="slider"></span>
-        </label>
+        <button class="icon-btn" id="changeUsernameBtn" data-icon="edit" data-icon-size="15" aria-label="Cambiar nombre de usuario"></button>
       </div>
-      <div class="settings-item" id="changePinRow" style="display:none;">
+      <div class="settings-item">
         <div>
-          <div class="t">Cambiar PIN</div>
-          <div class="d">Actualiza tu código de acceso</div>
+          <div class="t">Contraseña</div>
+          <div class="d">••••••••</div>
         </div>
-        <button class="icon-btn" id="changePinBtn" aria-label="Cambiar PIN">✎</button>
+        <button class="icon-btn" id="changePasswordBtn" data-icon="edit" data-icon-size="15" aria-label="Cambiar contraseña"></button>
       </div>
-      <p style="font-size:11.5px; color:var(--muted-2); margin:8px 0 0;">Si olvidas tu PIN, la única forma de recuperar el acceso es borrar los datos del navegador — lo que también borrará tu información. Guárdalo en un lugar seguro.</p>
+      <div class="settings-item">
+        <div>
+          <div class="t">Pregunta de seguridad</div>
+          <div class="d" id="securityQuestionDisplay">No configurada — recomendado para recuperar tu acceso</div>
+        </div>
+        <button class="icon-btn" id="configSecurityQBtn" data-icon="edit" data-icon-size="15" aria-label="Configurar pregunta de seguridad"></button>
+      </div>
+      <div class="settings-item">
+        <div>
+          <div class="t">Cerrar sesión</div>
+          <div class="d">Vuelve a la pantalla de inicio de sesión</div>
+        </div>
+        <button class="icon-btn" id="logoutBtn" data-icon="logout" data-icon-size="15" aria-label="Cerrar sesión"></button>
+      </div>
+      <p style="font-size:11.5px; color:var(--muted-2); margin:8px 0 0;">Este inicio de sesión es local a este teléfono, no hay recuperación por correo. Configura una pregunta de seguridad para poder recuperar el acceso tú mismo — si no la configuras y olvidas tu contraseña, la única salida es borrar los datos del navegador (perderías tu información).</p>
     </div>
 
     <div class="section-title"><h2>Reportes</h2></div>
@@ -878,14 +978,14 @@ input:checked + .slider::before{ transform:translateX(19px); background:var(--go
           <div class="t">Exportar a Excel (CSV)</div>
           <div class="d">Descarga ingresos y gastos en una hoja de cálculo</div>
         </div>
-        <button class="icon-btn" id="exportCsvBtn" aria-label="Exportar CSV">📊</button>
+        <button class="icon-btn" id="exportCsvBtn" aria-label="Exportar CSV" data-icon="chart" data-icon-size="15"></button>
       </div>
       <div class="settings-item">
         <div>
           <div class="t">Reporte imprimible / PDF</div>
           <div class="d">Abre un reporte listo para imprimir o guardar como PDF</div>
         </div>
-        <button class="icon-btn" id="printReportBtn" aria-label="Imprimir reporte">🖨</button>
+        <button class="icon-btn" id="printReportBtn" aria-label="Imprimir reporte" data-icon="printer" data-icon-size="15"></button>
       </div>
     </div>
 
@@ -904,13 +1004,24 @@ input:checked + .slider::before{ transform:translateX(19px); background:var(--go
 
 <!-- Bottom navigation -->
 <nav class="bottom-nav">
-  <button class="nav-btn active" data-view="dashboard"><span class="ic">🏠</span>Inicio</button>
-  <button class="nav-btn accent" data-view="ingreso"><span class="ic">＋</span>Ingreso</button>
-  <button class="nav-btn" data-view="gasto"><span class="ic">➖</span>Gasto</button>
-  <button class="nav-btn" data-view="catalogo"><span class="ic">📖</span>Catálogo</button>
-  <button class="nav-btn" data-view="historial"><span class="ic">📜</span>Historial</button>
-  <button class="nav-btn" data-view="ajustes"><span class="ic">⚙️</span>Ajustes</button>
+  <button class="nav-btn active" data-view="dashboard"><span class="ic" data-icon="home"></span>Inicio</button>
+  <button class="nav-btn" data-view="citas"><span class="ic" data-icon="calendar"></span>Citas</button>
+  <button class="nav-btn accent" data-view="ingreso"><span class="ic" data-icon="plus"></span>Ventas</button>
+  <button class="nav-btn" data-view="historial"><span class="ic" data-icon="clock"></span>Historial</button>
+  <button class="nav-btn" id="moreNavBtn"><span class="ic" data-icon="more"></span>Más</button>
 </nav>
+
+<div class="modal-overlay" id="moreSheetOverlay">
+  <div class="modal">
+    <h3 style="margin-bottom:14px;">Más opciones</h3>
+    <div class="more-sheet-grid">
+      <button type="button" class="more-sheet-item" data-view="gasto"><span class="ic" data-icon="minus"></span>Gasto</button>
+      <button type="button" class="more-sheet-item" data-view="catalogo"><span class="ic" data-icon="book"></span>Catálogo</button>
+      <button type="button" class="more-sheet-item" data-view="ajustes"><span class="ic" data-icon="settings"></span>Ajustes</button>
+    </div>
+    <button class="btn-secondary" id="moreSheetClose" style="margin-top:16px;">Cerrar</button>
+  </div>
+</div>
 
 <!-- Modal genérico -->
 <div class="modal-overlay" id="modalOverlay">
@@ -931,16 +1042,59 @@ input:checked + .slider::before{ transform:translateX(19px); background:var(--go
 (function(){
   "use strict";
 
+  /* ============== SISTEMA DE ÍCONOS (SVG de línea, sin librerías externas) ============== */
+  const ICONS = {
+    home: '<path d="M3 10.5 12 3l9 7.5"/><path d="M5.5 9.5V20a1 1 0 0 0 1 1H9a1 1 0 0 0 1-1v-4a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v4a1 1 0 0 0 1 1h2.5a1 1 0 0 0 1-1V9.5"/>',
+    plus: '<path d="M12 5v14"/><path d="M5 12h14"/>',
+    minus: '<path d="M5 12h14"/>',
+    calendar: '<rect x="3" y="4.5" width="18" height="16" rx="2"/><path d="M16 2.5v4"/><path d="M8 2.5v4"/><path d="M3 10h18"/>',
+    book: '<path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2Z"/>',
+    bag: '<path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/>',
+    clock: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/>',
+    settings: '<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1Z"/>',
+    more: '<circle cx="5" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/>',
+    edit: '<path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/>',
+    trash: '<path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/>',
+    close: '<path d="M18 6 6 18"/><path d="M6 6l12 12"/>',
+    sun: '<circle cx="12" cy="12" r="4.5"/><path d="M12 2.5v2.5M12 19v2.5M4.6 4.6l1.8 1.8M17.6 17.6l1.8 1.8M2.5 12h2.5M19 12h2.5M4.6 19.4l1.8-1.8M17.6 6.4l1.8-1.8"/>',
+    moon: '<path d="M21 12.8A9 9 0 1 1 11.2 3 7 7 0 0 0 21 12.8Z"/>',
+    lock: '<rect x="4" y="11" width="16" height="10" rx="2"/><path d="M7.5 11V7.5a4.5 4.5 0 0 1 9 0V11"/>',
+    alert: '<path d="M10.3 3.9 1.9 18a2 2 0 0 0 1.7 3h16.9a2 2 0 0 0 1.7-3L13.8 3.9a2 2 0 0 0-3.5 0Z"/><path d="M12 9v4"/><circle cx="12" cy="16.5" r="0.5" fill="currentColor" stroke="none"/>',
+    scissors: '<circle cx="6" cy="6" r="2.7"/><circle cx="6" cy="18" r="2.7"/><path d="M19.5 4.5 8 15.9"/><path d="M14.3 14.3 19.5 19.5"/><path d="M8 8.1l2 2"/>',
+    user: '<path d="M19 20.5v-1.8a3.6 3.6 0 0 0-3.6-3.6H8.6A3.6 3.6 0 0 0 5 18.7v1.8"/><circle cx="12" cy="7.2" r="3.6"/>',
+    eye: '<path d="M1.5 12S5.3 5 12 5s10.5 7 10.5 7-3.8 7-10.5 7-10.5-7-10.5-7Z"/><circle cx="12" cy="12" r="2.8"/>',
+    eyeOff: '<path d="M16.9 16.9A9.9 9.9 0 0 1 12 18.2c-6.6 0-10.2-7.2-10.2-7.2a19.6 19.6 0 0 1 4.4-5.5M9.5 5.1A9.9 9.9 0 0 1 12 4.8c6.6 0 10.2 7.2 10.2 7.2a19.6 19.6 0 0 1-2 2.9M13.9 13.9a2.8 2.8 0 1 1-3.8-3.8"/><path d="M2 2l20 20"/>',
+    logout: '<path d="M9 20.5H6a2 2 0 0 1-2-2v-13a2 2 0 0 1 2-2h3"/><path d="M15.5 16.5 20 12l-4.5-4.5"/><path d="M20 12H9"/>',
+    droplet: '<path d="M12 2.5s6.5 7.4 6.5 12A6.5 6.5 0 0 1 5.5 14.5c0-4.6 6.5-12 6.5-12Z"/>',
+    tag: '<path d="M12.6 2.6A2 2 0 0 0 11.2 2H4a2 2 0 0 0-2 2v7.2a2 2 0 0 0 .6 1.4l8.7 8.7a2.4 2.4 0 0 0 3.4 0l6.6-6.6a2.4 2.4 0 0 0 0-3.4Z"/><circle cx="7.5" cy="7.5" r="1.4" fill="currentColor" stroke="none"/>',
+    ruler: '<path d="m16.2 3.3 4.5 4.5-13 13-4.5-4.5Z"/><path d="m14.7 4.8 2 2"/><path d="m11.7 7.8 2 2"/><path d="m8.7 10.8 2 2"/><path d="m5.7 13.8 2 2"/>',
+    chart: '<path d="M3 3v18h18"/><rect x="7" y="13" width="3" height="5"/><rect x="12" y="9" width="3" height="9"/><rect x="17" y="5" width="3" height="13"/>',
+    printer: '<path d="M6 9V2.5h12V9"/><path d="M6 18H4.5a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h15a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2H18"/><rect x="6" y="14" width="12" height="7.5"/>',
+    package: '<path d="M21 8 12 3 3 8v8l9 5 9-5Z"/><path d="M3 8l9 5 9-5"/><path d="M12 13v8"/>',
+    phone: '<path d="M6.6 10.8a15.7 15.7 0 0 0 6.6 6.6l2.2-2.2a1 1 0 0 1 1-.25 8.8 8.8 0 0 0 2.8.44 1 1 0 0 1 1 1V20a1 1 0 0 1-1 1A17 17 0 0 1 3 4a1 1 0 0 1 1-1h3.6a1 1 0 0 1 1 1 8.8 8.8 0 0 0 .45 2.8 1 1 0 0 1-.25 1Z"/>',
+    cash: '<rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="3"/><path d="M6 10v.01M18 14v.01"/>',
+    card: '<rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/><path d="M6 15h4"/>',
+    check: '<path d="M20 6 9 17l-5-5"/>',
+    trendUp: '<path d="M3 17l6-6 4 4 7-8"/><path d="M14 7h7v7"/>',
+    trendDown: '<path d="M3 7l6 6 4-4 7 8"/><path d="M14 17h7v-7"/>'
+  };
+  function icon(name, size){
+    size = size || 20;
+    return `<svg viewBox="0 0 24 24" width="${size}" height="${size}" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">${ICONS[name]||''}</svg>`;
+  }
+
   /* ============== ALMACENAMIENTO ============== */
   const DB_KEYS = {
     services: 'aure_services',
     insumos: 'aure_insumos',
+    products: 'aure_products',
     income: 'aure_income',
     expenses: 'aure_expenses',
     categories: 'aure_categories',
     units: 'aure_units',
     settings: 'aure_settings',
-    cierres: 'aure_cierres'
+    cierres: 'aure_cierres',
+    citas: 'aure_citas'
   };
 
   const DEFAULT_SERVICES = [
@@ -957,12 +1111,27 @@ input:checked + .slider::before{ transform:translateX(19px); background:var(--go
     {id:'i3', name:'Toallas', unit:'Unidad', stock:15, minStock:4, unitCost:2.5},
     {id:'i4', name:'Alcohol / desinfectante', unit:'ml', stock:500, minStock:100, unitCost:0.01}
   ];
+  const DEFAULT_PRODUCTS = [
+    {id:'p1', name:'Bebida energética', price:2.5, cost:1.2, stock:24, minStock:6},
+    {id:'p2', name:'Gorra Aure', price:12, cost:6, stock:10, minStock:2},
+    {id:'p3', name:'Pulsera', price:5, cost:2, stock:15, minStock:3},
+    {id:'p4', name:'Crema facial', price:8, cost:4, stock:12, minStock:3}
+  ];
   const DEFAULT_CATEGORIES = ['Insumos','Renta','Servicios (agua/luz)','Mantenimiento','Publicidad','Otros'];
   const DEFAULT_UNITS = ['Unidad','ml','Litro','g','Kg','Caja','Paquete'];
+  const DEFAULT_PASSWORD_HASH = '1848115502'; // hash de "admin1234", la contraseña de fábrica
   const DEFAULT_SETTINGS = {
     reminderOn:true, reminderDays:7, lastBackup:null, installedAt:new Date().toISOString(),
-    theme:'dark', pinEnabled:false, pinHash:null
+    theme:'dark', username:'admin', passwordHash:DEFAULT_PASSWORD_HASH,
+    securityQuestion:null, securityAnswerHash:null
   };
+  const SECURITY_QUESTIONS = [
+    '¿Cuál es el nombre de tu primera mascota?',
+    '¿En qué ciudad naciste?',
+    '¿Cuál es tu comida favorita?',
+    '¿Cómo se llamaba tu escuela primaria?',
+    '¿Cuál es el segundo nombre de tu mamá?'
+  ];
 
   function load(key, fallback){
     try{
@@ -978,14 +1147,17 @@ input:checked + .slider::before{ transform:translateX(19px); background:var(--go
 
   let services = load(DB_KEYS.services, DEFAULT_SERVICES);
   let insumos = load(DB_KEYS.insumos, DEFAULT_INSUMOS);
+  let products = load(DB_KEYS.products, DEFAULT_PRODUCTS);
   let income = load(DB_KEYS.income, []);
   let expenses = load(DB_KEYS.expenses, []);
   let categories = load(DB_KEYS.categories, DEFAULT_CATEGORIES);
   let units = load(DB_KEYS.units, DEFAULT_UNITS);
   let cierres = load(DB_KEYS.cierres, []);
+  let citas = load(DB_KEYS.citas, []);
   let settings = Object.assign({}, DEFAULT_SETTINGS, load(DB_KEYS.settings, {}));
   if(!load(DB_KEYS.services,null)) save(DB_KEYS.services, services);
   if(!load(DB_KEYS.insumos,null)) save(DB_KEYS.insumos, insumos);
+  if(!load(DB_KEYS.products,null)) save(DB_KEYS.products, products);
   if(!load(DB_KEYS.categories,null)) save(DB_KEYS.categories, categories);
   if(!load(DB_KEYS.units,null)) save(DB_KEYS.units, units);
   if(!load(DB_KEYS.settings,null)) save(DB_KEYS.settings, settings);
@@ -1016,7 +1188,7 @@ input:checked + .slider::before{ transform:translateX(19px); background:var(--go
   }
 
   /* ============== NAVEGACIÓN ============== */
-  const views = ['dashboard','ingreso','gasto','historial','catalogo','ajustes'];
+  const views = ['dashboard','ingreso','gasto','historial','catalogo','ajustes','citas'];
   function goTo(view){
     views.forEach(v=>{
       document.getElementById('view-'+v).classList.toggle('active', v===view);
@@ -1027,16 +1199,37 @@ input:checked + .slider::before{ transform:translateX(19px); background:var(--go
     if(view==='dashboard') renderDashboard();
     if(view==='historial') renderHistory();
     if(view==='catalogo') renderCatalogo();
-    if(view==='ingreso'){ renderServicePick(); document.getElementById('incomeDate').value = todayLocalInput(); }
+    if(view==='ingreso'){ switchSaleType(saleType); document.getElementById('incomeDate').value = todayLocalInput(); }
     if(view==='gasto'){ renderCategorySelect(); renderExpenseInsumoLink(); document.getElementById('expenseDate').value = todayLocalInput(); }
+    if(view==='citas'){ renderCitasView(); }
     window.scrollTo(0,0);
   }
-  document.querySelectorAll('.nav-btn').forEach(b=>{
+  document.querySelectorAll('.nav-btn[data-view]').forEach(b=>{
     b.addEventListener('click', ()=>goTo(b.dataset.view));
   });
   document.querySelectorAll('[data-goto]').forEach(b=>{
     b.addEventListener('click', ()=>goTo(b.dataset.goto));
   });
+  document.getElementById('moreNavBtn').addEventListener('click', ()=>{
+    document.getElementById('moreSheetOverlay').classList.add('active');
+  });
+  document.getElementById('moreSheetClose').addEventListener('click', ()=>{
+    document.getElementById('moreSheetOverlay').classList.remove('active');
+  });
+  document.getElementById('moreSheetOverlay').addEventListener('click', (e)=>{
+    if(e.target.id==='moreSheetOverlay') document.getElementById('moreSheetOverlay').classList.remove('active');
+  });
+  document.querySelectorAll('.more-sheet-item').forEach(b=>{
+    b.addEventListener('click', ()=>{
+      document.getElementById('moreSheetOverlay').classList.remove('active');
+      goTo(b.dataset.view);
+    });
+  });
+  function renderStaticIcons(){
+    document.querySelectorAll('[data-icon]').forEach(el=>{
+      el.innerHTML = icon(el.dataset.icon, el.dataset.iconSize ? parseInt(el.dataset.iconSize,10) : 20);
+    });
+  }
 
   /* ============== MODAL genérico (prompt/confirm) ============== */
   const modalOverlay = document.getElementById('modalOverlay');
@@ -1129,21 +1322,22 @@ input:checked + .slider::before{ transform:translateX(19px); background:var(--go
 
   function renderTxRows(list, compact){
     if(list.length===0){
-      return `<div class="empty-state"><div class="glyph">🪒</div><p>Aún no hay movimientos registrados.</p></div>`;
+      return `<div class="empty-state"><div class="glyph">${icon('clock',28)}</div><p>Aún no hay movimientos registrados.</p></div>`;
     }
     return list.map(t=>{
       const isIncome = t.type==='income';
       const title = isIncome ? t.serviceName : t.description;
       const sub = new Date(t.date).toLocaleString('es', {day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit'}) + ' · ' + (t.payment||'');
       const amount = isIncome ? Number(t.price) : Number(t.amount);
+      const rowIcon = isIncome ? (t.itemType==='producto' ? icon('bag',17) : icon('scissors',17)) : icon('printer',17);
       return `<div class="tx-row">
-        <div class="tx-icon ${isIncome?'income':'expense'}">${isIncome?'✂️':'🧾'}</div>
+        <div class="tx-icon ${isIncome?'income':'expense'}">${rowIcon}</div>
         <div class="tx-body">
           <div class="tx-title">${escapeHtml(title)}</div>
           <div class="tx-meta">${sub}</div>
         </div>
         <div class="tx-amount ${isIncome?'income':'expense'}">${isIncome?'+':'-'}${money(amount)}</div>
-        <button class="tx-del" data-id="${t.id}" data-type="${t.type}">✕</button>
+        <button class="tx-del" data-id="${t.id}" data-type="${t.type}" aria-label="Eliminar">${icon('close',15)}</button>
       </div>`;
     }).join('');
   }
@@ -1236,12 +1430,26 @@ input:checked + .slider::before{ transform:translateX(19px); background:var(--go
 
   /* ============== REGISTRAR INGRESO ============== */
   let selectedServiceId = null;
+  let selectedProductId = null;
+  let saleType = 'servicio';
+
+  function switchSaleType(type){
+    saleType = type;
+    document.querySelectorAll('#saleTypeGroup button').forEach(b=>b.classList.toggle('active', b.dataset.val===type));
+    document.getElementById('servicePickGroup').style.display = type==='servicio' ? '' : 'none';
+    document.getElementById('productPickGroup').style.display = type==='producto' ? '' : 'none';
+    if(type==='servicio') renderServicePick(); else renderProductPick();
+  }
+  document.querySelectorAll('#saleTypeGroup button').forEach(b=>{
+    b.addEventListener('click', ()=>switchSaleType(b.dataset.val));
+  });
+
   function renderServicePick(){
     const wrap = document.getElementById('servicePick');
     if(services.length===0){
       wrap.style.gridTemplateColumns = '1fr';
       wrap.innerHTML = `<div class="empty-state" style="padding:20px 6px;">
-        <div class="glyph">✂️</div>
+        <div class="glyph">${icon('scissors',28)}</div>
         <p>No tienes servicios en tu catálogo.</p>
         <button class="btn-secondary" type="button" id="goAddServiceFromIncome" style="margin-top:10px;">+ Agregar servicio</button>
       </div>`;
@@ -1271,6 +1479,48 @@ input:checked + .slider::before{ transform:translateX(19px); background:var(--go
       wrap.querySelector(`.svc[data-id="${selectedServiceId}"]`).classList.add('active');
     }
   }
+
+  function renderProductPick(){
+    const wrap = document.getElementById('productPick');
+    if(products.length===0){
+      wrap.style.gridTemplateColumns = '1fr';
+      wrap.innerHTML = `<div class="empty-state" style="padding:20px 6px;">
+        <div class="glyph">${icon('bag',28)}</div>
+        <p>No tienes productos en tu catálogo.</p>
+        <button class="btn-secondary" type="button" id="goAddProductFromIncome" style="margin-top:10px;">+ Agregar producto</button>
+      </div>`;
+      const goBtn = document.getElementById('goAddProductFromIncome');
+      if(goBtn) goBtn.addEventListener('click', ()=>{ goTo('catalogo'); switchSubtab('productos'); });
+      return;
+    }
+    wrap.style.gridTemplateColumns = '';
+    wrap.innerHTML = products.map(p=>{
+      const outOfStock = Number(p.stock)<=0;
+      return `<button type="button" class="svc ${outOfStock?'disabled':''}" data-id="${p.id}" data-price="${p.price}" ${outOfStock?'disabled':''}>
+        <span class="n">${escapeHtml(p.name)}</span>
+        <span class="p">${money(p.price)}</span>
+        <span class="meta-line" style="margin-top:2px;">${outOfStock ? 'Agotado' : `Stock: ${p.stock}`}</span>
+      </button>`;
+    }).join('');
+    wrap.querySelectorAll('.svc:not(.disabled)').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        wrap.querySelectorAll('.svc').forEach(b=>b.classList.remove('active'));
+        btn.classList.add('active');
+        selectedProductId = btn.dataset.id;
+        document.getElementById('incomeAmount').value = btn.dataset.price;
+      });
+    });
+    const stillExists = products.some(p=>p.id===selectedProductId && Number(p.stock)>0);
+    if(!stillExists){ selectedProductId = null; }
+    const firstAvailable = wrap.querySelector('.svc:not(.disabled)');
+    if(!selectedProductId && firstAvailable){
+      firstAvailable.click();
+    } else if(selectedProductId){
+      const sel = wrap.querySelector(`.svc[data-id="${selectedProductId}"]`);
+      if(sel) sel.classList.add('active');
+    }
+  }
+
   document.querySelectorAll('#incomePayGroup button').forEach(b=>{
     b.addEventListener('click', ()=>{
       document.querySelectorAll('#incomePayGroup button').forEach(x=>x.classList.remove('active'));
@@ -1278,37 +1528,50 @@ input:checked + .slider::before{ transform:translateX(19px); background:var(--go
     });
   });
   document.getElementById('saveIncomeBtn').addEventListener('click', ()=>{
-    const svc = services.find(s=>s.id===selectedServiceId);
     const amount = parseFloat(document.getElementById('incomeAmount').value);
     const dateVal = document.getElementById('incomeDate').value;
     const note = document.getElementById('incomeNote').value.trim();
     const payBtn = document.querySelector('#incomePayGroup button.active');
-    if(!svc){ toast('Selecciona un servicio'); return; }
     if(isNaN(amount) || amount<=0){ toast('Ingresa un precio válido'); return; }
     if(!dateVal){ toast('Selecciona fecha y hora'); return; }
 
-    const costSnapshot = serviceCost(svc);
-    income.push({
-      id: uid(), serviceId: svc.id, serviceName: svc.name, price: amount,
-      cost: costSnapshot,
-      payment: payBtn.dataset.val, date: new Date(dateVal).toISOString(), note
-    });
-    save(DB_KEYS.income, income);
-
-    // Descuenta automáticamente los insumos usados por este servicio, según su receta
-    const recipe = svc.recipe || [];
-    let lowStockHit = null;
-    recipe.forEach(r=>{
-      const ins = insumos.find(i=>i.id===r.insumoId);
-      if(!ins) return;
-      const wasLow = Number(ins.stock) <= Number(ins.minStock);
-      ins.stock = Math.max(0, Number(ins.stock) - Number(r.qty));
-      const nowLow = Number(ins.stock) <= Number(ins.minStock);
-      if(nowLow && !wasLow) lowStockHit = ins.name;
-    });
-    if(recipe.length>0) save(DB_KEYS.insumos, insumos);
-
-    toast(lowStockHit ? `Ingreso registrado ✓ · ⚠ Stock bajo: ${lowStockHit}` : 'Ingreso registrado ✓');
+    if(saleType==='servicio'){
+      const svc = services.find(s=>s.id===selectedServiceId);
+      if(!svc){ toast('Selecciona un servicio'); return; }
+      const costSnapshot = serviceCost(svc);
+      income.push({
+        id: uid(), itemType:'servicio', serviceId: svc.id, serviceName: svc.name, price: amount,
+        cost: costSnapshot, payment: payBtn.dataset.val, date: new Date(dateVal).toISOString(), note
+      });
+      save(DB_KEYS.income, income);
+      // Descuenta automáticamente los insumos usados por este servicio, según su receta
+      const recipe = svc.recipe || [];
+      let lowStockHit = null;
+      recipe.forEach(r=>{
+        const ins = insumos.find(i=>i.id===r.insumoId);
+        if(!ins) return;
+        const wasLow = Number(ins.stock) <= Number(ins.minStock);
+        ins.stock = Math.max(0, Number(ins.stock) - Number(r.qty));
+        const nowLow = Number(ins.stock) <= Number(ins.minStock);
+        if(nowLow && !wasLow) lowStockHit = ins.name;
+      });
+      if(recipe.length>0) save(DB_KEYS.insumos, insumos);
+      toast(lowStockHit ? `Venta registrada ✓ · ⚠ Stock bajo: ${lowStockHit}` : 'Venta registrada ✓');
+    } else {
+      const prod = products.find(p=>p.id===selectedProductId);
+      if(!prod){ toast('Selecciona un producto'); return; }
+      if(Number(prod.stock)<=0){ toast('Ese producto está agotado'); return; }
+      income.push({
+        id: uid(), itemType:'producto', productId: prod.id, serviceName: prod.name, price: amount,
+        cost: Number(prod.cost)||0, payment: payBtn.dataset.val, date: new Date(dateVal).toISOString(), note
+      });
+      save(DB_KEYS.income, income);
+      const wasLow = Number(prod.stock) <= Number(prod.minStock);
+      prod.stock = Math.max(0, Number(prod.stock) - 1);
+      save(DB_KEYS.products, products);
+      const nowLow = Number(prod.stock) <= Number(prod.minStock);
+      toast((nowLow && !wasLow) ? `Venta registrada ✓ · ⚠ Stock bajo: ${prod.name}` : 'Venta registrada ✓');
+    }
     document.getElementById('incomeNote').value='';
     syncAll();
     goTo('dashboard');
@@ -1494,7 +1757,7 @@ input:checked + .slider::before{ transform:translateX(19px); background:var(--go
   function renderCierresList(){
     const wrap = document.getElementById('historyList');
     if(cierres.length===0){
-      wrap.innerHTML = `<div class="empty-state"><div class="glyph">🔒</div><p>Aún no has cerrado caja ningún día.</p></div>`;
+      wrap.innerHTML = `<div class="empty-state"><div class="glyph">${icon('lock',28)}</div><p>Aún no has cerrado caja ningún día.</p></div>`;
       return;
     }
     const sorted = [...cierres].sort((a,b)=> new Date(b.date)-new Date(a.date));
@@ -1508,14 +1771,14 @@ input:checked + .slider::before{ transform:translateX(19px); background:var(--go
         diffLine = `<div class="meta-line num" style="color:${color};">Diferencia: ${sign}${money(c.difference)}${ok?' (cuadra ✓)':''}</div>`;
       }
       return `<div class="tx-row" style="align-items:flex-start;">
-        <div class="tx-icon expense" style="background:rgba(193,122,79,.18); color:var(--gold-bright);">🔒</div>
+        <div class="tx-icon expense" style="background:rgba(24,168,120,.18); color:var(--gold-bright);">${icon('lock',17)}</div>
         <div class="tx-body">
           <div class="tx-title">Cierre de caja</div>
           <div class="tx-meta">${label}</div>
           <div class="meta-line num">Ingresos ${money(c.totalIncome)} · Gastos ${money(c.totalExpense)} · Efvo. esperado ${money(c.expectedCash)}</div>
           ${diffLine}
         </div>
-        <button class="tx-del" data-cierre-id="${c.id}" aria-label="Eliminar cierre">✕</button>
+        <button class="tx-del" data-cierre-id="${c.id}" aria-label="Eliminar cierre">${icon('close',15)}</button>
       </div>`;
     }).join('');
     wrap.querySelectorAll('[data-cierre-id]').forEach(btn=>{
@@ -1544,13 +1807,16 @@ input:checked + .slider::before{ transform:translateX(19px); background:var(--go
     renderDashboardStats();
     if(document.getElementById('view-dashboard').classList.contains('active')){ renderChart7(); }
     renderRecent();
+    renderCitasHoy();
     if(document.getElementById('view-historial').classList.contains('active')){ renderHistory(); }
     renderServicesView();
+    renderProductsView();
     renderInsumosView();
     renderCategoriesView();
     renderUnitsView();
     renderCategorySelect();
     renderExpenseInsumoLink();
+    if(document.getElementById('view-citas').classList.contains('active')){ renderCitasView(); }
   }
 
   /* ============== CATÁLOGO: SERVICIOS · INSUMOS · CATEGORÍAS (CRUD completo) ============== */
@@ -1558,7 +1824,7 @@ input:checked + .slider::before{ transform:translateX(19px); background:var(--go
   function switchSubtab(tab){
     catalogSubtab = tab;
     document.querySelectorAll('.chip[data-subtab]').forEach(c=>c.classList.toggle('active', c.dataset.subtab===tab));
-    ['servicios','insumos','categorias','unidades'].forEach(t=>{
+    ['servicios','productos','insumos','categorias','unidades'].forEach(t=>{
       document.getElementById('panel-'+t).style.display = (t===tab) ? '' : 'none';
     });
     renderCatalogo();
@@ -1568,9 +1834,160 @@ input:checked + .slider::before{ transform:translateX(19px); background:var(--go
   });
   function renderCatalogo(){
     if(catalogSubtab==='servicios') renderServicesView();
+    else if(catalogSubtab==='productos') renderProductsView();
     else if(catalogSubtab==='insumos') renderInsumosView();
     else if(catalogSubtab==='categorias') renderCategoriesView();
     else renderUnitsView();
+  }
+
+  /* ============== CITAS (Create, Read, Update, Delete) ============== */
+  function formatPhoneInput(el){
+    el.addEventListener('input', ()=>{
+      let d = el.value.replace(/\D/g,'').slice(0,10);
+      let out = d;
+      if(d.length>6) out = `(${d.slice(0,3)}) ${d.slice(3,6)}-${d.slice(6)}`;
+      else if(d.length>3) out = `(${d.slice(0,3)}) ${d.slice(3)}`;
+      else if(d.length>0) out = `(${d}`;
+      el.value = out;
+    });
+  }
+  function citaStatusLabel(s){
+    return {pendiente:'Pendiente', confirmada:'Confirmada', completada:'Completada', cancelada:'Cancelada'}[s] || s;
+  }
+  let citaFilter = 'proximas';
+  document.querySelectorAll('.chip[data-cita-filter]').forEach(chip=>{
+    chip.addEventListener('click', ()=>{
+      document.querySelectorAll('.chip[data-cita-filter]').forEach(c=>c.classList.remove('active'));
+      chip.classList.add('active');
+      citaFilter = chip.dataset.citaFilter;
+      renderCitasView();
+    });
+  });
+  function renderCitasView(){
+    const now = new Date();
+    let list = [...citas];
+    if(citaFilter==='hoy'){
+      const start = startOfRange('day'); const next = new Date(start); next.setDate(next.getDate()+1);
+      list = list.filter(c=>{const d=new Date(c.date); return d>=start && d<next;});
+    } else if(citaFilter==='proximas'){
+      list = list.filter(c=> new Date(c.date) >= now && c.status!=='completada' && c.status!=='cancelada');
+    } else if(citaFilter==='completadas'){
+      list = list.filter(c=>c.status==='completada');
+    }
+    list.sort((a,b)=> new Date(a.date)-new Date(b.date));
+    const wrap = document.getElementById('citasList');
+    if(list.length===0){
+      wrap.innerHTML = `<div class="empty-state"><div class="glyph">${icon('calendar',28)}</div><p>No hay citas en este filtro.</p></div>`;
+      return;
+    }
+    wrap.innerHTML = list.map(c=>{
+      const d = new Date(c.date);
+      const dayLbl = d.toLocaleDateString('es', {day:'2-digit', month:'short'});
+      const timeLbl = d.toLocaleTimeString('es', {hour:'2-digit', minute:'2-digit'});
+      const svcLine = c.serviceName ? escapeHtml(c.serviceName) : 'Sin servicio específico';
+      return `<div class="cita-row">
+        <div class="cita-time"><div class="d">${dayLbl}</div><div class="t">${timeLbl}</div></div>
+        <div class="cita-body">
+          <div class="name">${escapeHtml(c.clientName)}</div>
+          <div class="meta">${escapeHtml(c.clientPhone||'Sin teléfono')} · ${svcLine}</div>
+          <span class="cita-status ${c.status}">${citaStatusLabel(c.status)}</span>
+        </div>
+        <div class="row-actions">
+          ${c.status!=='completada' && c.status!=='cancelada' ? `<button class="icon-btn" data-complete-cita="${c.id}" aria-label="Marcar completada" title="Marcar completada">${icon('bag',15)}</button>` : ''}
+          <button class="icon-btn" data-edit-cita="${c.id}" aria-label="Editar cita">${icon('edit',15)}</button>
+          <button class="icon-btn" data-del-cita="${c.id}" aria-label="Eliminar cita">${icon('trash',15)}</button>
+        </div>
+      </div>`;
+    }).join('');
+    wrap.querySelectorAll('[data-edit-cita]').forEach(b=>b.addEventListener('click', ()=>openCitaModal(citas.find(c=>c.id===b.dataset.editCita))));
+    wrap.querySelectorAll('[data-del-cita]').forEach(b=>b.addEventListener('click', ()=>deleteCita(b.dataset.delCita)));
+    wrap.querySelectorAll('[data-complete-cita]').forEach(b=>b.addEventListener('click', ()=>completeCita(b.dataset.completeCita)));
+  }
+  function renderCitasHoy(){
+    const start = startOfRange('day'); const next = new Date(start); next.setDate(next.getDate()+1);
+    const hoy = citas.filter(c=>{const d=new Date(c.date); return d>=start && d<next && c.status!=='cancelada';})
+      .sort((a,b)=> new Date(a.date)-new Date(b.date));
+    const card = document.getElementById('citasHoyCard');
+    if(hoy.length===0){ card.style.display='none'; return; }
+    card.style.display='';
+    document.getElementById('citasHoyList').innerHTML = hoy.map(c=>{
+      const timeLbl = new Date(c.date).toLocaleTimeString('es', {hour:'2-digit', minute:'2-digit'});
+      return `<div class="cita-hoy-row"><span class="t">${timeLbl}</span><span>${escapeHtml(c.clientName)}${c.serviceName?' · '+escapeHtml(c.serviceName):''}</span>
+        <span class="cita-status ${c.status}" style="margin-left:auto;">${citaStatusLabel(c.status)}</span></div>`;
+    }).join('');
+  }
+  function citaFormHtml(c){
+    c = c || {clientName:'', clientPhone:'', serviceId:'', date:'', status:'pendiente', notes:''};
+    const svcOptions = `<option value="">Sin servicio específico</option>` + services.map(s=>`<option value="${s.id}" ${s.id===c.serviceId?'selected':''}>${escapeHtml(s.name)}</option>`).join('');
+    const dateVal = c.date ? new Date(c.date).toISOString().slice(0,16) : todayLocalInput();
+    return `<div class="form-group"><label>Nombre del cliente</label><input class="form-control" id="fcName" value="${escapeHtml(c.clientName)}" placeholder="Ej. Juan Pérez"></div>
+      <div class="form-group"><label>Teléfono</label><input type="tel" class="form-control" id="fcPhone" value="${escapeHtml(c.clientPhone||'')}" placeholder="(000) 000-0000" maxlength="14"></div>
+      <div class="form-group"><label>Servicio</label><select class="form-control" id="fcService">${svcOptions}</select></div>
+      <div class="form-group"><label>Fecha y hora</label><input type="datetime-local" class="form-control" id="fcDate" value="${dateVal}"></div>
+      <div class="form-group"><label>Estado</label><select class="form-control" id="fcStatus">
+        <option value="pendiente" ${c.status==='pendiente'?'selected':''}>Pendiente</option>
+        <option value="confirmada" ${c.status==='confirmada'?'selected':''}>Confirmada</option>
+        <option value="completada" ${c.status==='completada'?'selected':''}>Completada</option>
+        <option value="cancelada" ${c.status==='cancelada'?'selected':''}>Cancelada</option>
+      </select></div>
+      <div class="form-group"><label>Notas (opcional)</label><input class="form-control" id="fcNotes" value="${escapeHtml(c.notes||'')}" placeholder="Ej. Prefiere corte con máquina 2"></div>`;
+  }
+  function openCitaModal(existing){
+    openModal({
+      title: existing ? 'Editar cita' : 'Nueva cita',
+      formHtml: citaFormHtml(existing), confirmText:'Guardar',
+      onConfirm:()=>{
+        const clientName = document.getElementById('fcName').value.trim();
+        const clientPhone = document.getElementById('fcPhone').value.trim();
+        const serviceId = document.getElementById('fcService').value;
+        const svc = services.find(s=>s.id===serviceId);
+        const dateVal = document.getElementById('fcDate').value;
+        const status = document.getElementById('fcStatus').value;
+        const notes = document.getElementById('fcNotes').value.trim();
+        if(!clientName){ toast('Escribe el nombre del cliente'); return; }
+        if(!dateVal){ toast('Selecciona fecha y hora'); return; }
+        if(existing){
+          Object.assign(existing, {clientName, clientPhone, serviceId: serviceId||null, serviceName: svc?svc.name:null, date:new Date(dateVal).toISOString(), status, notes});
+        } else {
+          citas.push({id:uid(), clientName, clientPhone, serviceId: serviceId||null, serviceName: svc?svc.name:null, date:new Date(dateVal).toISOString(), status, notes});
+        }
+        save(DB_KEYS.citas, citas);
+        closeModal(); syncAll(); renderCitasHoy(); toast(existing?'Cita actualizada ✓':'Cita agendada ✓');
+      }
+    });
+    const phoneInput = document.getElementById('fcPhone');
+    if(phoneInput) formatPhoneInput(phoneInput);
+  }
+  document.getElementById('addCitaBtn').addEventListener('click', ()=>openCitaModal(null));
+  function deleteCita(id){
+    openModal({
+      title:'Eliminar cita', body:'Esta acción no se puede deshacer.',
+      confirmText:'Eliminar', danger:true,
+      onConfirm:()=>{
+        citas = citas.filter(c=>c.id!==id);
+        save(DB_KEYS.citas, citas);
+        closeModal(); syncAll(); renderCitasHoy(); toast('Cita eliminada');
+      }
+    });
+  }
+  function completeCita(id){
+    const c = citas.find(x=>x.id===id);
+    if(!c) return;
+    openModal({
+      title:'Marcar cita como completada',
+      body: c.serviceId ? 'Se marcará como completada. Después puedes registrar la venta en la pestaña Ventas con el servicio ya seleccionado.' : 'Se marcará como completada.',
+      confirmText:'Completar',
+      onConfirm:()=>{
+        c.status = 'completada';
+        save(DB_KEYS.citas, citas);
+        closeModal(); syncAll(); renderCitasHoy(); toast('Cita completada ✓');
+        if(c.serviceId){
+          selectedServiceId = c.serviceId;
+          saleType = 'servicio';
+          goTo('ingreso');
+        }
+      }
+    });
   }
 
   /* ---------- SERVICIOS (Create, Read, Update, Delete + receta de insumos) ---------- */
@@ -1583,7 +2000,7 @@ input:checked + .slider::before{ transform:translateX(19px); background:var(--go
   function renderServicesView(){
     const wrap = document.getElementById('serviceList');
     if(services.length===0){
-      wrap.innerHTML = `<div class="empty-state"><div class="glyph">✂️</div><p>No hay servicios en tu catálogo. Agrega el primero.</p></div>`;
+      wrap.innerHTML = `<div class="empty-state"><div class="glyph">${icon('scissors',28)}</div><p>No hay servicios en tu catálogo. Agrega el primero.</p></div>`;
       return;
     }
     wrap.innerHTML = services.map(s=>{
@@ -1602,12 +2019,12 @@ input:checked + .slider::before{ transform:translateX(19px); background:var(--go
         <div class="info">
           <div class="name">${escapeHtml(s.name)}</div>
           <div class="price">${money(s.price)}</div>
-          <div class="meta-line">🧴 ${recipeText}</div>
+          <div class="meta-line">${icon('droplet',12)} ${recipeText}</div>
           ${marginLine}
         </div>
         <div class="row-actions">
-          <button class="icon-btn" data-edit-service="${s.id}" aria-label="Editar servicio">✎</button>
-          <button class="icon-btn" data-del-service="${s.id}" aria-label="Eliminar servicio">✕</button>
+          <button class="icon-btn" data-edit-service="${s.id}" aria-label="Editar servicio">${icon('edit',15)}</button>
+          <button class="icon-btn" data-del-service="${s.id}" aria-label="Eliminar servicio">${icon('trash',15)}</button>
         </div>
       </div>`;
     }).join('');
@@ -1625,8 +2042,8 @@ input:checked + .slider::before{ transform:translateX(19px); background:var(--go
       const opts = insumos.map(ins=>`<option value="${ins.id}" ${ins.id===r.insumoId?'selected':''}>${escapeHtml(ins.name)}</option>`).join('');
       return `<div style="display:flex;gap:6px;align-items:center;margin-bottom:8px;">
         <select class="form-control" data-recipe-insumo="${i}" style="flex:1;">${opts}</select>
-        <input type="number" min="0.01" step="0.01" class="form-control" data-recipe-qty="${i}" value="${r.qty}" style="width:64px; padding:13px 8px;">
-        <button type="button" class="icon-btn" data-recipe-remove="${i}" aria-label="Quitar">✕</button>
+        <input type="number" min="0.01" step="0.01" class="form-control" data-recipe-qty="${i}" value="${r.qty}" placeholder="0" style="width:64px; padding:13px 8px;">
+        <button type="button" class="icon-btn" data-recipe-remove="${i}" aria-label="Quitar">${icon('close',13)}</button>
       </div>`;
     }
     function buildForm(){
@@ -1701,18 +2118,130 @@ input:checked + .slider::before{ transform:translateX(19px); background:var(--go
     });
   }
 
+  /* ---------- PRODUCTOS (Create, Read, Update, Delete + control de stock) ---------- */
+  function productMargin(p){
+    const price = Number(p.price)||0, cost = Number(p.cost)||0;
+    const margin = price - cost;
+    const pct = price>0 ? (margin/price)*100 : 0;
+    return {cost, margin, pct};
+  }
+  function renderProductsView(){
+    const wrap = document.getElementById('productList');
+    if(products.length===0){
+      wrap.innerHTML = `<div class="empty-state"><div class="glyph">${icon('bag',28)}</div><p>No hay productos en venta. Agrega el primero.</p></div>`;
+      return;
+    }
+    wrap.innerHTML = products.map(p=>{
+      const low = Number(p.stock) <= Number(p.minStock);
+      const m = productMargin(p);
+      const marginColor = m.margin>=0 ? 'var(--green-bright)' : 'var(--red-bright)';
+      return `<div class="insumo-row">
+        <div class="info">
+          <div class="name">${escapeHtml(p.name)} <span class="stock-badge ${low?'low':''}">${low?'stock bajo':'ok'}</span></div>
+          <div class="meta">${money(p.price)} venta · ${p.stock} unidades en stock · mín. ${p.minStock}</div>
+          <div class="meta-line num" style="color:${marginColor};">Costo ${money(m.cost)} · Margen ${money(m.margin)} (${m.pct.toFixed(0)}%)</div>
+          <div class="stepper" style="margin-top:6px;">
+            <button type="button" data-pstock-down="${p.id}" aria-label="Restar stock">−</button>
+            <span class="num" style="font-size:12.5px; min-width:26px; text-align:center;">${p.stock}</span>
+            <button type="button" data-pstock-up="${p.id}" aria-label="Sumar stock">＋</button>
+          </div>
+        </div>
+        <div class="row-actions">
+          <button class="icon-btn" data-edit-product="${p.id}" aria-label="Editar producto">${icon('edit',15)}</button>
+          <button class="icon-btn" data-del-product="${p.id}" aria-label="Eliminar producto">${icon('trash',15)}</button>
+        </div>
+      </div>`;
+    }).join('');
+    wrap.querySelectorAll('[data-edit-product]').forEach(b=>b.addEventListener('click', ()=>editProduct(b.dataset.editProduct)));
+    wrap.querySelectorAll('[data-del-product]').forEach(b=>b.addEventListener('click', ()=>deleteProduct(b.dataset.delProduct)));
+    wrap.querySelectorAll('[data-pstock-up]').forEach(b=>b.addEventListener('click', ()=>adjustProductStock(b.dataset.pstockUp, 1)));
+    wrap.querySelectorAll('[data-pstock-down]').forEach(b=>b.addEventListener('click', ()=>adjustProductStock(b.dataset.pstockDown, -1)));
+  }
+  function adjustProductStock(id, delta){
+    const p = products.find(x=>x.id===id);
+    if(!p) return;
+    p.stock = Math.max(0, Number(p.stock) + delta);
+    save(DB_KEYS.products, products);
+    syncAll();
+  }
+  function productFormHtml(p){
+    p = p || {name:'', price:'', cost:'', stock:0, minStock:0};
+    return `<div class="form-group"><label>Nombre</label><input class="form-control" id="fpName" value="${escapeHtml(p.name)}" placeholder="Ej. Bebida energética, Gorra Aure"></div>
+      <div class="form-group"><label>Precio de venta</label><div class="amount-input-wrap"><span class="currency">$</span><input type="number" step="0.01" min="0" class="form-control" id="fpPrice" value="${p.price}" placeholder="0.00"></div></div>
+      <div class="form-group"><label>Costo (opcional, para margen)</label><div class="amount-input-wrap"><span class="currency">$</span><input type="number" step="0.01" min="0" class="form-control" id="fpCost" value="${p.cost}" placeholder="0.00"></div></div>
+      <div class="form-group"><label>Stock actual</label><input type="number" step="1" min="0" class="form-control" id="fpStock" value="${p.stock}" placeholder="0"></div>
+      <div class="form-group"><label>Stock mínimo (alerta)</label><input type="number" step="1" min="0" class="form-control" id="fpMin" value="${p.minStock}" placeholder="0"></div>`;
+  }
+  function readProductForm(){
+    return {
+      name: document.getElementById('fpName').value.trim(),
+      price: parseFloat(document.getElementById('fpPrice').value),
+      cost: parseFloat(document.getElementById('fpCost').value) || 0,
+      stock: parseInt(document.getElementById('fpStock').value, 10),
+      minStock: parseInt(document.getElementById('fpMin').value, 10)
+    };
+  }
+  function validProductForm(v){
+    if(!v.name) return 'Escribe un nombre';
+    if(isNaN(v.price) || v.price<0) return 'Ingresa un precio de venta válido';
+    if(isNaN(v.stock) || v.stock<0) return 'Ingresa un stock válido';
+    if(isNaN(v.minStock) || v.minStock<0) return 'Ingresa un stock mínimo válido';
+    return null;
+  }
+  document.getElementById('addProductBtn').addEventListener('click', ()=>{
+    openModal({
+      title:'Nuevo producto', formHtml: productFormHtml(), confirmText:'Guardar',
+      onConfirm:()=>{
+        const v = readProductForm();
+        const err = validProductForm(v);
+        if(err){ toast(err); return; }
+        if(isDuplicateName(products, v.name)){ toast('Ya existe un producto con ese nombre'); return; }
+        products.push({id:uid(), ...v});
+        save(DB_KEYS.products, products);
+        closeModal(); syncAll(); toast('Producto agregado ✓');
+      }
+    });
+  });
+  function editProduct(id){
+    const p = products.find(x=>x.id===id);
+    if(!p) return;
+    openModal({
+      title:'Editar producto', formHtml: productFormHtml(p), confirmText:'Guardar',
+      onConfirm:()=>{
+        const v = readProductForm();
+        const err = validProductForm(v);
+        if(err){ toast(err); return; }
+        if(isDuplicateName(products, v.name, id)){ toast('Ya existe un producto con ese nombre'); return; }
+        Object.assign(p, v);
+        save(DB_KEYS.products, products);
+        closeModal(); syncAll(); toast('Producto actualizado ✓');
+      }
+    });
+  }
+  function deleteProduct(id){
+    openModal({
+      title:'Eliminar producto', body:'Las ventas ya registradas de este producto no se verán afectadas; solo desaparecerá del catálogo.',
+      confirmText:'Eliminar', danger:true,
+      onConfirm:()=>{
+        products = products.filter(x=>x.id!==id);
+        save(DB_KEYS.products, products);
+        closeModal(); syncAll(); toast('Producto eliminado');
+      }
+    });
+  }
+
   /* ---------- INSUMOS (Create, Read, Update, Delete + control de stock) ---------- */
   function renderInsumosView(){
     const wrap = document.getElementById('insumoList');
     if(insumos.length===0){
-      wrap.innerHTML = `<div class="empty-state"><div class="glyph">🧴</div><p>No hay insumos registrados. Agrega el primero.</p></div>`;
+      wrap.innerHTML = `<div class="empty-state"><div class="glyph">${icon('droplet',28)}</div><p>No hay insumos registrados. Agrega el primero.</p></div>`;
       return;
     }
     wrap.innerHTML = insumos.map(it=>{
       const low = Number(it.stock) <= Number(it.minStock);
       return `<div class="insumo-row">
         <div class="info">
-          <div class="name">${escapeHtml(it.name)} <span class="stock-badge ${low?'low':''}">${low?'⚠ bajo':'ok'}</span></div>
+          <div class="name">${escapeHtml(it.name)} <span class="stock-badge ${low?'low':''}">${low?(icon('alert',10)+' bajo'):'ok'}</span></div>
           <div class="meta">${it.stock} ${escapeHtml(it.unit)} en stock · mín. ${it.minStock} · costo ${money(it.unitCost)} / ${escapeHtml(it.unit)}</div>
           <div class="stepper" style="margin-top:6px;">
             <button type="button" data-stock-down="${it.id}" aria-label="Restar stock">−</button>
@@ -1721,8 +2250,8 @@ input:checked + .slider::before{ transform:translateX(19px); background:var(--go
           </div>
         </div>
         <div class="row-actions">
-          <button class="icon-btn" data-edit-insumo="${it.id}" aria-label="Editar insumo">✎</button>
-          <button class="icon-btn" data-del-insumo="${it.id}" aria-label="Eliminar insumo">✕</button>
+          <button class="icon-btn" data-edit-insumo="${it.id}" aria-label="Editar insumo">${icon('edit',15)}</button>
+          <button class="icon-btn" data-del-insumo="${it.id}" aria-label="Eliminar insumo">${icon('trash',15)}</button>
         </div>
       </div>`;
     }).join('');
@@ -1821,8 +2350,8 @@ input:checked + .slider::before{ transform:translateX(19px); background:var(--go
       <div class="svc-row">
         <div class="info"><div class="name">${escapeHtml(c)}</div></div>
         <div class="row-actions">
-          <button class="icon-btn" data-edit-cat="${i}" aria-label="Editar categoría">✎</button>
-          <button class="icon-btn" data-del-cat="${i}" aria-label="Eliminar categoría">✕</button>
+          <button class="icon-btn" data-edit-cat="${i}" aria-label="Editar categoría">${icon('edit',15)}</button>
+          <button class="icon-btn" data-del-cat="${i}" aria-label="Eliminar categoría">${icon('trash',15)}</button>
         </div>
       </div>`).join('');
     catWrap.querySelectorAll('[data-edit-cat]').forEach(b=>b.addEventListener('click', ()=>editCategory(parseInt(b.dataset.editCat,10))));
@@ -1892,8 +2421,8 @@ input:checked + .slider::before{ transform:translateX(19px); background:var(--go
       return `<div class="svc-row">
         <div class="info"><div class="name">${escapeHtml(u)}</div><div class="meta-line">${usageText}</div></div>
         <div class="row-actions">
-          <button class="icon-btn" data-edit-unit="${i}" aria-label="Editar unidad">✎</button>
-          <button class="icon-btn" data-del-unit="${i}" aria-label="Eliminar unidad">✕</button>
+          <button class="icon-btn" data-edit-unit="${i}" aria-label="Editar unidad">${icon('edit',15)}</button>
+          <button class="icon-btn" data-del-unit="${i}" aria-label="Eliminar unidad">${icon('trash',15)}</button>
         </div>
       </div>`;
     }).join('');
@@ -2014,7 +2543,7 @@ input:checked + .slider::before{ transform:translateX(19px); background:var(--go
     el.textContent = settings.lastBackup ? new Date(settings.lastBackup).toLocaleString('es') : 'Nunca';
   }
   function doExport(){
-    const payload = { services, insumos, income, expenses, categories, units, cierres, exportedAt: new Date().toISOString(), app:'Aure Barbershop', version:4 };
+    const payload = { services, insumos, products, income, expenses, categories, units, cierres, citas, exportedAt: new Date().toISOString(), app:'Aure Barbershop', version:5 };
     const blob = new Blob([JSON.stringify(payload,null,2)], {type:'application/json'});
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -2048,15 +2577,17 @@ input:checked + .slider::before{ transform:translateX(19px); background:var(--go
           onConfirm:()=>{
             services = data.services || DEFAULT_SERVICES;
             insumos = data.insumos || DEFAULT_INSUMOS;
+            products = data.products || DEFAULT_PRODUCTS;
             income = data.income || [];
             expenses = data.expenses || [];
             categories = data.categories || DEFAULT_CATEGORIES;
             units = data.units || DEFAULT_UNITS;
             cierres = data.cierres || [];
+            citas = data.citas || [];
             if(categories.length===0) categories = DEFAULT_CATEGORIES.slice();
             if(units.length===0) units = DEFAULT_UNITS.slice();
-            save(DB_KEYS.services, services); save(DB_KEYS.insumos, insumos); save(DB_KEYS.income, income);
-            save(DB_KEYS.expenses, expenses); save(DB_KEYS.categories, categories); save(DB_KEYS.units, units); save(DB_KEYS.cierres, cierres);
+            save(DB_KEYS.services, services); save(DB_KEYS.insumos, insumos); save(DB_KEYS.products, products); save(DB_KEYS.income, income);
+            save(DB_KEYS.expenses, expenses); save(DB_KEYS.categories, categories); save(DB_KEYS.units, units); save(DB_KEYS.cierres, cierres); save(DB_KEYS.citas, citas);
             closeModal(); toast('Datos restaurados ✓');
             syncAll();
           }
@@ -2115,7 +2646,7 @@ input:checked + .slider::before{ transform:translateX(19px); background:var(--go
   function applyTheme(theme){
     document.documentElement.setAttribute('data-theme', theme);
     const btn = document.getElementById('themeToggleBtn');
-    if(btn) btn.textContent = theme==='dark' ? '🌙' : '☀️';
+    if(btn) btn.innerHTML = icon(theme==='dark' ? 'moon' : 'sun', 17);
     const segDark = document.getElementById('themeSegDark');
     const segLight = document.getElementById('themeSegLight');
     if(segDark && segLight){
@@ -2136,108 +2667,201 @@ input:checked + .slider::before{ transform:translateX(19px); background:var(--go
   document.getElementById('themeSegDark').addEventListener('click', ()=>setTheme('dark'));
   document.getElementById('themeSegLight').addEventListener('click', ()=>setTheme('light'));
 
-  /* ============== PIN DE SEGURIDAD ==============
-     Hash simple (no criptográfico) — suficiente como disuasivo local
-     de acceso casual, no como seguridad de nivel bancario. Se guarda
-     solo el hash, nunca el PIN en texto plano. */
+  /* ============== LOGIN (usuario + contraseña) ==============
+     Hash simple (no criptográfico) — es un login "de verdad" en cuanto
+     a experiencia, pero sigue siendo 100% local (sin servidor), acorde
+     al presupuesto del proyecto. Se guarda solo el hash, nunca la
+     contraseña en texto plano. */
   function simpleHash(str){
     let h = 5381;
     for(let i=0;i<str.length;i++){ h = ((h*33) ^ str.charCodeAt(i)) >>> 0; }
     return String(h);
   }
-  let pinBuffer = '';
-  let pinFlow = null;
-  let pinTempFirst = '';
+  let loginFlow = null;
 
-  function updateLockDots(){
-    document.querySelectorAll('#lockDots .lock-dot').forEach((d,i)=>{
-      d.classList.toggle('filled', i < pinBuffer.length);
-      d.classList.remove('error');
-    });
-  }
-  function lockShakeError(msg){
-    toast(msg);
-    const dotsWrap = document.getElementById('lockDots');
-    document.querySelectorAll('#lockDots .lock-dot').forEach(d=>d.classList.add('error'));
-    dotsWrap.classList.add('lock-shake');
-    setTimeout(()=>{ dotsWrap.classList.remove('lock-shake'); pinBuffer=''; updateLockDots(); }, 350);
-  }
-  function showLockScreen(mode, subtitle){
-    pinFlow = mode; pinBuffer = '';
-    document.getElementById('lockSubtitle').textContent = subtitle || 'Ingresa tu PIN';
-    document.getElementById('lockCancelBtn').style.display = (mode==='unlock') ? 'none' : 'inline-block';
-    updateLockDots();
-    document.getElementById('lockScreen').style.display = 'flex';
+  function configureLoginForm(flow){
+    loginFlow = flow;
+    const userGroup = document.getElementById('loginUsername').closest('.form-group');
+    const passGroup = document.getElementById('loginPassword').closest('.form-group');
+    const confirmGroup = document.getElementById('loginConfirmGroup');
+    const userLabel = userGroup.querySelector('label');
+    const passLabel = passGroup.querySelector('label');
+    const confirmLabel = confirmGroup.querySelector('label');
+
+    userGroup.style.display=''; passGroup.style.display=''; confirmGroup.style.display='none';
+    userLabel.textContent='Usuario'; passLabel.textContent='Contraseña'; confirmLabel.textContent='Confirmar contraseña';
+    document.getElementById('loginUsername').placeholder='Ej. admin';
+    document.getElementById('loginUsername').value='';
+    document.getElementById('loginPassword').value='';
+    document.getElementById('loginPasswordConfirm').value='';
+    document.getElementById('loginPassword').type='password';
+    document.getElementById('loginPassToggle').innerHTML = icon('eye',18);
+    document.getElementById('loginForm').classList.remove('error');
+    document.getElementById('lockCancelBtn').style.display = (flow==='login'||flow==='setup') ? 'none' : 'inline-block';
+    document.getElementById('forgotPasswordBtn').style.display = (flow==='login') ? 'block' : 'none';
+    document.getElementById('lockHint').textContent = (flow==='login'||flow==='setup')
+      ? 'Este acceso es local a este teléfono; no hay recuperación por correo.' : '';
+
+    if(flow==='login'){
+      document.getElementById('lockSubtitle').textContent='Ingresa tus credenciales';
+      document.getElementById('loginSubmitBtn').textContent='Iniciar sesión';
+    } else if(flow==='setup'){
+      document.getElementById('lockSubtitle').textContent='Crea tu cuenta para empezar';
+      confirmGroup.style.display='';
+      document.getElementById('loginSubmitBtn').textContent='Crear cuenta';
+    } else if(flow==='changePassword-verify'){
+      userGroup.style.display='none';
+      document.getElementById('lockSubtitle').textContent='Confirma tu contraseña actual';
+      passLabel.textContent='Contraseña actual';
+      document.getElementById('loginSubmitBtn').textContent='Continuar';
+    } else if(flow==='changePassword-new'){
+      userGroup.style.display='none'; confirmGroup.style.display='';
+      document.getElementById('lockSubtitle').textContent='Crea tu nueva contraseña';
+      passLabel.textContent='Nueva contraseña'; confirmLabel.textContent='Confirmar nueva contraseña';
+      document.getElementById('loginSubmitBtn').textContent='Guardar';
+    } else if(flow==='changeUsername-verify'){
+      userGroup.style.display='none';
+      document.getElementById('lockSubtitle').textContent='Confirma tu contraseña para continuar';
+      passLabel.textContent='Contraseña actual';
+      document.getElementById('loginSubmitBtn').textContent='Continuar';
+    } else if(flow==='changeUsername-new'){
+      passGroup.style.display='none';
+      document.getElementById('lockSubtitle').textContent='Escribe tu nuevo usuario';
+      userLabel.textContent='Nuevo usuario';
+      document.getElementById('loginUsername').value = settings.username || '';
+      document.getElementById('loginSubmitBtn').textContent='Guardar';
+    } else if(flow==='recover-answer'){
+      passGroup.style.display='none';
+      document.getElementById('lockSubtitle').textContent = settings.securityQuestion || '';
+      userLabel.textContent='Tu respuesta';
+      document.getElementById('loginUsername').placeholder='Escribe tu respuesta';
+      document.getElementById('loginSubmitBtn').textContent='Verificar';
+    }
+    document.getElementById('lockScreen').style.display='flex';
+    setTimeout(()=>{
+      const target = (flow==='changeUsername-new'||flow==='recover-answer') ? document.getElementById('loginUsername') : document.getElementById('loginPassword');
+      if(userGroup.style.display!=='none' && (flow==='login'||flow==='setup')) document.getElementById('loginUsername').focus();
+      else target.focus();
+    }, 60);
   }
   function hideLockScreen(){
-    document.getElementById('lockScreen').style.display = 'none';
-    pinFlow = null; pinBuffer = ''; pinTempFirst = '';
+    document.getElementById('lockScreen').style.display='none';
+    loginFlow = null;
   }
-  document.getElementById('lockPad').addEventListener('click', (e)=>{
-    const btn = e.target.closest('button[data-key]');
-    if(!btn) return;
-    const key = btn.dataset.key;
-    if(key==='back'){ pinBuffer = pinBuffer.slice(0,-1); updateLockDots(); return; }
-    if(pinBuffer.length>=4) return;
-    pinBuffer += key;
-    updateLockDots();
-    if(pinBuffer.length===4){ setTimeout(handlePinComplete, 130); }
+  function loginShake(msg){
+    toast(msg);
+    const form = document.getElementById('loginForm');
+    form.classList.add('error','lock-shake');
+    setTimeout(()=>form.classList.remove('lock-shake'), 350);
+  }
+  document.getElementById('loginPassToggle').addEventListener('click', ()=>{
+    const inp = document.getElementById('loginPassword');
+    const btn = document.getElementById('loginPassToggle');
+    const isPwd = inp.type==='password';
+    inp.type = isPwd ? 'text' : 'password';
+    btn.innerHTML = icon(isPwd?'eyeOff':'eye', 18);
   });
-  function handlePinComplete(){
-    if(pinFlow==='unlock'){
-      if(simpleHash(pinBuffer)===settings.pinHash){ hideLockScreen(); }
-      else{ lockShakeError('PIN incorrecto'); }
-    } else if(pinFlow==='setup1'){
-      pinTempFirst = pinBuffer; pinBuffer='';
-      pinFlow = 'setup2';
-      document.getElementById('lockSubtitle').textContent = 'Confirma tu nuevo PIN';
-      updateLockDots();
-    } else if(pinFlow==='setup2'){
-      if(pinBuffer===pinTempFirst){
-        settings.pinHash = simpleHash(pinBuffer);
-        settings.pinEnabled = true;
+  document.getElementById('lockCancelBtn').addEventListener('click', hideLockScreen);
+  document.getElementById('loginForm').addEventListener('submit', (e)=>{
+    e.preventDefault();
+    const u = document.getElementById('loginUsername').value.trim();
+    const p = document.getElementById('loginPassword').value;
+    const pc = document.getElementById('loginPasswordConfirm').value;
+
+    if(loginFlow==='login'){
+      if(u && u===settings.username && simpleHash(p)===settings.passwordHash){ hideLockScreen(); }
+      else { loginShake('Usuario o contraseña incorrectos'); }
+    } else if(loginFlow==='setup'){
+      if(!u){ loginShake('Escribe un nombre de usuario'); return; }
+      if(p.length<4){ loginShake('La contraseña debe tener al menos 4 caracteres'); return; }
+      if(p!==pc){ loginShake('Las contraseñas no coinciden'); return; }
+      settings.username = u; settings.passwordHash = simpleHash(p);
+      save(DB_KEYS.settings, settings);
+      hideLockScreen();
+      document.getElementById('accountUsernameDisplay').textContent = u;
+      checkDefaultCredentials();
+      toast('Cuenta creada ✓');
+    } else if(loginFlow==='changePassword-verify'){
+      if(simpleHash(p)!==settings.passwordHash){ loginShake('Contraseña incorrecta'); return; }
+      configureLoginForm('changePassword-new');
+    } else if(loginFlow==='changePassword-new'){
+      if(p.length<4){ loginShake('La contraseña debe tener al menos 4 caracteres'); return; }
+      if(p!==pc){ loginShake('Las contraseñas no coinciden'); return; }
+      settings.passwordHash = simpleHash(p);
+      save(DB_KEYS.settings, settings);
+      hideLockScreen();
+      checkDefaultCredentials();
+      toast('Contraseña actualizada ✓');
+    } else if(loginFlow==='changeUsername-verify'){
+      if(simpleHash(p)!==settings.passwordHash){ loginShake('Contraseña incorrecta'); return; }
+      configureLoginForm('changeUsername-new');
+    } else if(loginFlow==='changeUsername-new'){
+      if(!u){ loginShake('Escribe un nombre de usuario'); return; }
+      settings.username = u;
+      save(DB_KEYS.settings, settings);
+      hideLockScreen();
+      document.getElementById('accountUsernameDisplay').textContent = u;
+      checkDefaultCredentials();
+      toast('Usuario actualizado ✓');
+    } else if(loginFlow==='recover-answer'){
+      if(simpleHash(u.trim().toLowerCase())!==settings.securityAnswerHash){ loginShake('Respuesta incorrecta'); return; }
+      toast('Respuesta correcta. Crea tu nueva contraseña.');
+      configureLoginForm('changePassword-new');
+    }
+  });
+  document.getElementById('forgotPasswordBtn').addEventListener('click', ()=>{
+    if(!settings.securityQuestion){
+      openModal({
+        title:'Sin recuperación configurada',
+        body:'No configuraste una pregunta de seguridad, así que no es posible recuperar el acceso desde aquí. La única salida es borrar los datos del navegador para este sitio, lo que también borrará la información del negocio (a menos que tengas un respaldo JSON exportado).',
+        confirmText:'Entendido', onConfirm:closeModal
+      });
+      return;
+    }
+    configureLoginForm('recover-answer');
+  });
+  document.getElementById('changeUsernameBtn').addEventListener('click', ()=>configureLoginForm('changeUsername-verify'));
+  document.getElementById('changePasswordBtn').addEventListener('click', ()=>configureLoginForm('changePassword-verify'));
+  document.getElementById('logoutBtn').addEventListener('click', ()=>{
+    openModal({
+      title:'Cerrar sesión', body:'Tendrás que ingresar tu usuario y contraseña de nuevo para volver a entrar.',
+      confirmText:'Cerrar sesión', danger:true,
+      onConfirm:()=>{ closeModal(); configureLoginForm('login'); }
+    });
+  });
+
+  function checkDefaultCredentials(){
+    const usingDefault = settings.username==='admin' && settings.passwordHash===DEFAULT_PASSWORD_HASH;
+    document.getElementById('defaultPassBanner').style.display = usingDefault ? 'flex' : 'none';
+  }
+  function updateSecurityQuestionDisplay(){
+    document.getElementById('securityQuestionDisplay').textContent = settings.securityQuestion
+      ? settings.securityQuestion
+      : 'No configurada — recomendado para recuperar tu acceso';
+  }
+  document.getElementById('configSecurityQBtn').addEventListener('click', ()=>{
+    openModal({
+      title: settings.securityQuestion ? 'Cambiar pregunta de seguridad' : 'Configurar pregunta de seguridad',
+      formHtml: `
+        <div class="form-group"><label>Tu contraseña actual</label><input type="password" class="form-control" id="fsqPassword" placeholder="••••••••"></div>
+        <div class="form-group"><label>Pregunta</label>
+          <select class="form-control" id="fsqQuestion">${SECURITY_QUESTIONS.map(q=>`<option value="${escapeHtml(q)}">${escapeHtml(q)}</option>`).join('')}</select>
+        </div>
+        <div class="form-group"><label>Tu respuesta</label><input type="text" class="form-control" id="fsqAnswer" placeholder="Escribe tu respuesta"></div>
+        <p style="font-size:11.5px; color:var(--muted-2); margin:0;">La respuesta no distingue mayúsculas/minúsculas. Elige algo que recuerdes fácilmente.</p>`,
+      confirmText:'Guardar',
+      onConfirm:()=>{
+        const pass = document.getElementById('fsqPassword').value;
+        const q = document.getElementById('fsqQuestion').value;
+        const ans = document.getElementById('fsqAnswer').value.trim();
+        if(simpleHash(pass)!==settings.passwordHash){ toast('Contraseña incorrecta'); return; }
+        if(!ans){ toast('Escribe una respuesta'); return; }
+        settings.securityQuestion = q;
+        settings.securityAnswerHash = simpleHash(ans.toLowerCase());
         save(DB_KEYS.settings, settings);
-        hideLockScreen();
-        document.getElementById('pinToggle').checked = true;
-        document.getElementById('changePinRow').style.display = '';
-        toast('PIN activado ✓');
-      } else {
-        pinTempFirst=''; pinBuffer='';
-        pinFlow = 'setup1';
-        document.getElementById('lockSubtitle').textContent = 'No coincide. Crea tu PIN de nuevo';
-        updateLockDots();
+        closeModal(); updateSecurityQuestionDisplay(); toast('Pregunta de seguridad guardada ✓');
       }
-    } else if(pinFlow==='changeOld'){
-      if(simpleHash(pinBuffer)===settings.pinHash){
-        pinBuffer=''; pinFlow='setup1';
-        document.getElementById('lockSubtitle').textContent = 'Crea tu nuevo PIN';
-        updateLockDots();
-      } else { lockShakeError('PIN actual incorrecto'); }
-    } else if(pinFlow==='disable'){
-      if(simpleHash(pinBuffer)===settings.pinHash){
-        settings.pinEnabled = false; settings.pinHash = null;
-        save(DB_KEYS.settings, settings);
-        hideLockScreen();
-        document.getElementById('pinToggle').checked = false;
-        document.getElementById('changePinRow').style.display = 'none';
-        toast('PIN desactivado');
-      } else { lockShakeError('PIN incorrecto'); }
-    }
-  }
-  document.getElementById('lockCancelBtn').addEventListener('click', ()=>{
-    hideLockScreen();
-    document.getElementById('pinToggle').checked = settings.pinEnabled;
-  });
-  document.getElementById('pinToggle').addEventListener('change', (e)=>{
-    if(e.target.checked){
-      showLockScreen('setup1', 'Crea tu nuevo PIN');
-    } else {
-      e.target.checked = true;
-      showLockScreen('disable', 'Ingresa tu PIN actual para desactivar');
-    }
-  });
-  document.getElementById('changePinBtn').addEventListener('click', ()=>{
-    showLockScreen('changeOld', 'Ingresa tu PIN actual');
+    });
   });
 
   /* ============== REPORTES: CSV E IMPRESIÓN/PDF ==============
@@ -2325,11 +2949,15 @@ input:checked + .slider::before{ transform:translateX(19px); background:var(--go
   updateLastBackupText();
   checkReminder();
   renderDashboard();
-  document.getElementById('pinToggle').checked = !!settings.pinEnabled;
-  document.getElementById('changePinRow').style.display = settings.pinEnabled ? '' : 'none';
-  if(settings.pinEnabled && settings.pinHash){
-    showLockScreen('unlock', 'Ingresa tu PIN');
+  document.getElementById('accountUsernameDisplay').textContent = settings.username || '—';
+  updateSecurityQuestionDisplay();
+  renderStaticIcons();
+  if(!settings.username){
+    configureLoginForm('setup');
+  } else {
+    configureLoginForm('login');
   }
+  checkDefaultCredentials();
 
   // Registro del Service Worker: solo funciona bajo HTTPS (ej. GitHub Pages).
   // Si se abre el archivo local (file://) o el navegador no lo soporta,

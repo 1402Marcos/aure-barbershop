@@ -3,7 +3,7 @@
 // Los DATOS (ventas, gastos, insumos) NO viven aquí — siguen en localStorage,
 // dentro del propio index.html, y este archivo no los toca para nada.
 
-const CACHE_NAME = 'aure-barbershop-v1';
+const CACHE_NAME = 'aure-barbershop-v2';
 const APP_SHELL = [
   './',
   './index.html',
