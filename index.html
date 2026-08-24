@@ -1344,6 +1344,8 @@ input:checked + .slider::before{ transform:translateX(19px); background:var(--go
       renderChart7();
     }
     renderRecent();
+    renderCitasHoy();
+    renderCashButtons();
   }
 
   function renderDashboardStats(){
@@ -1941,11 +1943,7 @@ input:checked + .slider::before{ transform:translateX(19px); background:var(--go
      visible), y las tres listas del catálogo — así nunca hay pantallas
      desactualizadas sin importar desde dónde se hizo el cambio. */
   function syncAll(){
-    renderDashboardStats();
-    if(document.getElementById('view-dashboard').classList.contains('active')){ renderChart7(); }
-    renderRecent();
-    renderCitasHoy();
-    renderCashButtons();
+    renderDashboard();
     if(document.getElementById('view-historial').classList.contains('active')){ renderHistory(); }
     renderServicesView();
     renderProductsView();
@@ -3231,7 +3229,6 @@ input:checked + .slider::before{ transform:translateX(19px); background:var(--go
   updateLastBackupText();
   checkReminder();
   renderDashboard();
-  renderCashButtons();
   document.getElementById('accountUsernameDisplay').textContent = settings.username || '—';
   updateSecurityQuestionDisplay();
   renderStaticIcons();
