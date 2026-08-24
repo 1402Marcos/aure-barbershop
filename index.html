@@ -2002,13 +2002,12 @@ input:checked + .slider::before{ transform:translateX(19px); background:var(--go
     });
   });
   function renderCitasView(){
-    const now = new Date();
     let list = [...citas];
     if(citaFilter==='hoy'){
       const start = startOfRange('day'); const next = new Date(start); next.setDate(next.getDate()+1);
       list = list.filter(c=>{const d=new Date(c.date); return d>=start && d<next;});
     } else if(citaFilter==='proximas'){
-      list = list.filter(c=> new Date(c.date) >= now && c.status!=='completada' && c.status!=='cancelada');
+      list = list.filter(c=> new Date(c.date) >= startOfRange('day') && c.status!=='completada' && c.status!=='cancelada');
     } else if(citaFilter==='completadas'){
       list = list.filter(c=>c.status==='completada');
     }
