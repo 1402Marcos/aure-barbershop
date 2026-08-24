@@ -134,7 +134,7 @@ button{ font-family:inherit; }
   padding:8px 12px; font-size:12.5px; border-radius:20px; border:1px solid var(--border);
   background:var(--surface-2); color:var(--muted); cursor:pointer;
 }
-.theme-seg button.active{ background:var(--gold); border-color:var(--gold); color:#221a10; font-weight:700; }
+.theme-seg button.active{ background:rgba(24,168,120,.14); border-color:var(--gold); color:var(--gold-bright); font-weight:700; }
 
 /* ---------- Pantalla de inicio de sesión ---------- */
 .lock-screen{
@@ -214,7 +214,7 @@ button{ font-family:inherit; }
   border:1px solid var(--border); background:transparent; color:var(--muted);
   cursor:pointer; transition:all .15s;
 }
-.totals-tabs button.active{ background:var(--gold); border-color:var(--gold); color:#221a10; font-weight:700;}
+.totals-tabs button.active{ background:rgba(24,168,120,.14); border-color:var(--gold); color:var(--gold-bright); font-weight:700;}
 .totals-grid{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }
 .totals-grid .full{ grid-column:1/-1; }
 .stat-label{ font-size:11px; text-transform:uppercase; letter-spacing:.08em; color:var(--muted-2); margin-bottom:4px;}
@@ -281,7 +281,7 @@ button{ font-family:inherit; }
   border:1px solid var(--border); background:var(--surface); color:var(--muted);
   cursor:pointer;
 }
-.chip.active{ background:var(--gold); color:#221a10; border-color:var(--gold); font-weight:700;}
+.chip.active{ background:rgba(24,168,120,.14); color:var(--gold-bright); border-color:var(--gold); font-weight:700;}
 
 /* ---------- Forms ---------- */
 .form-group{ margin-bottom:16px; }
@@ -301,7 +301,11 @@ select.form-control{ appearance:none; -webkit-appearance:none; background-image:
   flex:1; padding:11px 6px; border-radius:8px; border:1px solid var(--border);
   background:var(--surface-2); color:var(--muted); cursor:pointer; font-size:13px;
 }
-.pay-method-group button.active{ background:var(--gold); border-color:var(--gold); color:#221a10; font-weight:700;}
+.pay-method-group button.active{ background:rgba(24,168,120,.14); border-color:var(--gold); color:var(--gold-bright); font-weight:700;}
+.type-toggle{ display:flex; gap:8px; }
+.type-toggle button{ flex:1; padding:13px 6px; border-radius:8px; border:1.5px solid var(--border); background:var(--surface-2); color:var(--muted); cursor:pointer; font-size:14px; font-weight:600; transition:all .15s; }
+.type-toggle button[data-val="ingreso"].active{ background:rgba(47,174,125,.14); border-color:var(--green); color:var(--green-bright); }
+.type-toggle button[data-val="gasto"].active{ background:rgba(179,65,58,.14); border-color:var(--red); color:var(--red-bright); }
 
 .service-pick{
   display:grid; grid-template-columns:1fr 1fr; gap:9px;
@@ -629,7 +633,23 @@ input:checked + .slider::before{ transform:translateX(19px); background:var(--go
       <div id="citasHoyList"></div>
     </div>
 
-    <button type="button" class="btn-secondary" id="closeCashBtn" style="margin-bottom:14px;"><span class="ic" data-icon="lock" data-icon-size="15" style="display:inline-flex; vertical-align:-3px; margin-right:6px;"></span>Cerrar caja de hoy</button>
+    <div class="receipt tone-gold" id="cajaStatusCard">
+      <div style="display:flex; align-items:center; justify-content:space-between; gap:10px;">
+        <div>
+          <div class="stat-label" style="margin-bottom:4px;"><span class="ic" data-icon="lock" data-icon-size="12" style="display:inline-flex; vertical-align:-1px; margin-right:4px;"></span>Estado de caja hoy</div>
+          <div id="cajaStatusText" style="font-size:14.5px; font-weight:600; color:var(--cream);">Caja no abierta</div>
+        </div>
+        <div style="text-align:right;">
+          <div class="stat-label" style="margin-bottom:4px;">Efectivo esperado</div>
+          <div id="cajaExpectedText" class="num" style="font-size:17px; font-weight:700; color:var(--gold-bright);">$0.00</div>
+        </div>
+      </div>
+    </div>
+
+    <div style="display:flex; gap:10px; margin-bottom:14px;">
+      <button type="button" class="btn-secondary" id="openCashBtn" style="margin-bottom:0; width:auto; flex:1;"><span class="ic" data-icon="lock" data-icon-size="15" style="display:inline-flex; vertical-align:-3px; margin-right:6px;"></span>Abrir caja</button>
+      <button type="button" class="btn-secondary" id="closeCashBtn" style="margin-bottom:0; width:auto; flex:1;"><span class="ic" data-icon="lock" data-icon-size="15" style="display:inline-flex; vertical-align:-3px; margin-right:6px;"></span>Cerrar caja</button>
+    </div>
 
     <div class="badge-top-service" id="topServiceBadge">
       <div class="icon" data-icon="scissors" data-icon-size="20"></div>
@@ -666,103 +686,111 @@ input:checked + .slider::before{ transform:translateX(19px); background:var(--go
 
   <!-- ================= REGISTRAR INGRESO ================= -->
   <section id="view-ingreso" class="view">
-    <div class="section-title"><h2>Registrar venta</h2></div>
+    <div class="section-title"><h2 id="movementTitle">Registrar movimiento</h2></div>
 
     <div class="form-group">
-      <label>Tipo de venta</label>
-      <div class="pay-method-group" id="saleTypeGroup">
-        <button type="button" data-val="servicio" class="active"><span class="ic" data-icon="scissors" data-icon-size="16" style="display:inline-flex; vertical-align:-3px; margin-right:5px;"></span>Servicio</button>
-        <button type="button" data-val="producto"><span class="ic" data-icon="bag" data-icon-size="16" style="display:inline-flex; vertical-align:-3px; margin-right:5px;"></span>Producto</button>
+      <div class="type-toggle" id="movementTypeGroup">
+        <button type="button" class="active" data-val="ingreso"><span class="ic" data-icon="trendUp" data-icon-size="16" style="display:inline-flex; vertical-align:-3px; margin-right:5px;"></span>Ingreso</button>
+        <button type="button" data-val="gasto"><span class="ic" data-icon="trendDown" data-icon-size="16" style="display:inline-flex; vertical-align:-3px; margin-right:5px;"></span>Gasto</button>
       </div>
     </div>
 
-    <div class="form-group" id="servicePickGroup">
-      <label>Servicio</label>
-      <div class="service-pick" id="servicePick"></div>
-    </div>
-
-    <div class="form-group" id="productPickGroup" style="display:none;">
-      <label>Producto</label>
-      <div class="service-pick" id="productPick"></div>
-    </div>
-
-    <div class="form-group">
-      <label>Precio</label>
-      <div class="amount-input-wrap">
-        <span class="currency">$</span>
-        <input type="number" step="0.01" min="0" class="form-control" id="incomeAmount" placeholder="0.00">
+    <!-- ---- Campos de INGRESO (venta) ---- -->
+    <div id="ingresoFields">
+      <div class="form-group">
+        <label>Tipo de venta</label>
+        <div class="pay-method-group" id="saleTypeGroup">
+          <button type="button" data-val="servicio" class="active"><span class="ic" data-icon="scissors" data-icon-size="16" style="display:inline-flex; vertical-align:-3px; margin-right:5px;"></span>Servicio</button>
+          <button type="button" data-val="producto"><span class="ic" data-icon="bag" data-icon-size="16" style="display:inline-flex; vertical-align:-3px; margin-right:5px;"></span>Producto</button>
+        </div>
       </div>
-    </div>
 
-    <div class="form-group">
-      <label>Método de pago</label>
-      <div class="pay-method-group" id="incomePayGroup">
-        <button type="button" data-val="Efectivo" class="active"><span class="ic" data-icon="cash" data-icon-size="15" style="display:inline-flex; vertical-align:-3px; margin-right:5px;"></span>Efectivo</button>
-        <button type="button" data-val="Tarjeta"><span class="ic" data-icon="card" data-icon-size="15" style="display:inline-flex; vertical-align:-3px; margin-right:5px;"></span>Tarjeta</button>
+      <div class="form-group" id="servicePickGroup">
+        <label>Servicio</label>
+        <div class="service-pick" id="servicePick"></div>
       </div>
-    </div>
 
-    <div class="form-group">
-      <label>Fecha y hora</label>
-      <input type="datetime-local" class="form-control" id="incomeDate">
-    </div>
-
-    <div class="form-group">
-      <label>Nota (opcional)</label>
-      <input type="text" class="form-control" id="incomeNote" placeholder="Ej. Cliente frecuente, referido por...">
-    </div>
-
-    <button class="btn-primary" id="saveIncomeBtn">Guardar venta</button>
-  </section>
-
-  <!-- ================= REGISTRAR GASTO ================= -->
-  <section id="view-gasto" class="view">
-    <div class="section-title"><h2>Registrar gasto</h2></div>
-
-    <div class="form-group">
-      <label>Descripción</label>
-      <input type="text" class="form-control" id="expenseDesc" placeholder="Ej. Compra de shampoo">
-    </div>
-
-    <div class="form-group">
-      <label>Monto</label>
-      <div class="amount-input-wrap">
-        <span class="currency">$</span>
-        <input type="number" step="0.01" min="0" class="form-control" id="expenseAmount" placeholder="0.00">
+      <div class="form-group" id="productPickGroup" style="display:none;">
+        <label>Producto</label>
+        <div class="service-pick" id="productPick"></div>
       </div>
-    </div>
 
-    <div class="form-group">
-      <label>Categoría</label>
-      <select class="form-control" id="expenseCategory"></select>
-    </div>
-
-    <div class="form-group">
-      <label>¿Es compra de un insumo? (opcional)</label>
-      <select class="form-control" id="expenseInsumoLink">
-        <option value="">Ninguno</option>
-      </select>
-    </div>
-
-    <div class="form-group" id="expenseInsumoQtyGroup" style="display:none;">
-      <label>Cantidad comprada <span id="expenseInsumoUnitLbl"></span></label>
-      <input type="number" step="0.01" min="0.01" class="form-control" id="expenseInsumoQty" placeholder="0">
-    </div>
-
-    <div class="form-group">
-      <label>Método de pago</label>
-      <div class="pay-method-group" id="expensePayGroup">
-        <button type="button" data-val="Efectivo" class="active"><span class="ic" data-icon="cash" data-icon-size="15" style="display:inline-flex; vertical-align:-3px; margin-right:5px;"></span>Efectivo</button>
-        <button type="button" data-val="Tarjeta"><span class="ic" data-icon="card" data-icon-size="15" style="display:inline-flex; vertical-align:-3px; margin-right:5px;"></span>Tarjeta</button>
+      <div class="form-group">
+        <label>Precio</label>
+        <div class="amount-input-wrap">
+          <span class="currency">$</span>
+          <input type="number" step="0.01" min="0" class="form-control" id="incomeAmount" placeholder="0.00">
+        </div>
       </div>
+
+      <div class="form-group">
+        <label>Método de pago</label>
+        <div class="pay-method-group" id="incomePayGroup">
+          <button type="button" data-val="Efectivo" class="active"><span class="ic" data-icon="cash" data-icon-size="15" style="display:inline-flex; vertical-align:-3px; margin-right:5px;"></span>Efectivo</button>
+          <button type="button" data-val="Tarjeta"><span class="ic" data-icon="card" data-icon-size="15" style="display:inline-flex; vertical-align:-3px; margin-right:5px;"></span>Tarjeta</button>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Fecha y hora</label>
+        <input type="datetime-local" class="form-control" id="incomeDate">
+      </div>
+
+      <div class="form-group">
+        <label>Nota (opcional)</label>
+        <input type="text" class="form-control" id="incomeNote" placeholder="Ej. Cliente frecuente, referido por...">
+      </div>
+
+      <button class="btn-primary" id="saveIncomeBtn">Guardar venta</button>
     </div>
 
-    <div class="form-group">
-      <label>Fecha y hora</label>
-      <input type="datetime-local" class="form-control" id="expenseDate">
-    </div>
+    <!-- ---- Campos de GASTO ---- -->
+    <div id="gastoFields" style="display:none;">
+      <div class="form-group">
+        <label>Descripción</label>
+        <input type="text" class="form-control" id="expenseDesc" placeholder="Ej. Compra de shampoo">
+      </div>
 
-    <button class="btn-primary" id="saveExpenseBtn">Guardar gasto</button>
+      <div class="form-group">
+        <label>Monto</label>
+        <div class="amount-input-wrap">
+          <span class="currency">$</span>
+          <input type="number" step="0.01" min="0" class="form-control" id="expenseAmount" placeholder="0.00">
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Categoría</label>
+        <select class="form-control" id="expenseCategory"></select>
+      </div>
+
+      <div class="form-group">
+        <label>¿Es compra de un insumo? (opcional)</label>
+        <select class="form-control" id="expenseInsumoLink">
+          <option value="">Ninguno</option>
+        </select>
+      </div>
+
+      <div class="form-group" id="expenseInsumoQtyGroup" style="display:none;">
+        <label>Cantidad comprada <span id="expenseInsumoUnitLbl"></span></label>
+        <input type="number" step="0.01" min="0.01" class="form-control" id="expenseInsumoQty" placeholder="0">
+      </div>
+
+      <div class="form-group">
+        <label>Método de pago</label>
+        <div class="pay-method-group" id="expensePayGroup">
+          <button type="button" data-val="Efectivo" class="active"><span class="ic" data-icon="cash" data-icon-size="15" style="display:inline-flex; vertical-align:-3px; margin-right:5px;"></span>Efectivo</button>
+          <button type="button" data-val="Tarjeta"><span class="ic" data-icon="card" data-icon-size="15" style="display:inline-flex; vertical-align:-3px; margin-right:5px;"></span>Tarjeta</button>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Fecha y hora</label>
+        <input type="datetime-local" class="form-control" id="expenseDate">
+      </div>
+
+      <button class="btn-primary" id="saveExpenseBtn" style="background:var(--red-bright);">Guardar gasto</button>
+    </div>
   </section>
 
   <!-- ================= HISTORIAL ================= -->
@@ -786,17 +814,33 @@ input:checked + .slider::before{ transform:translateX(19px); background:var(--go
   <section id="view-citas" class="view">
     <div class="section-title">
       <h2>Citas</h2>
-      <button class="link" id="addCitaBtn">+ Nueva</button>
+      <button class="link" id="addCitaBtn">+ Nueva cita</button>
     </div>
 
     <div class="filter-row">
-      <button class="chip active" data-cita-filter="proximas">Próximas</button>
-      <button class="chip" data-cita-filter="hoy">Hoy</button>
-      <button class="chip" data-cita-filter="completadas">Completadas</button>
-      <button class="chip" data-cita-filter="todas">Todas</button>
+      <button class="chip active" data-citas-subtab="agenda">📅 Agenda</button>
+      <button class="chip" data-citas-subtab="clientes">👥 Clientes</button>
     </div>
 
-    <div class="receipt" id="citasList"></div>
+    <!-- Agenda -->
+    <div class="subtab-panel" id="citasPanel-agenda">
+      <div class="filter-row">
+        <button class="chip active" data-cita-filter="proximas">Próximas</button>
+        <button class="chip" data-cita-filter="hoy">Hoy</button>
+        <button class="chip" data-cita-filter="completadas">Completadas</button>
+        <button class="chip" data-cita-filter="todas">Todas</button>
+      </div>
+      <div class="receipt" id="citasList"></div>
+    </div>
+
+    <!-- Clientes frecuentes -->
+    <div class="subtab-panel" id="citasPanel-clientes" style="display:none;">
+      <div class="section-title" style="margin-top:6px;">
+        <h2>Clientes</h2>
+        <button class="link" id="addClienteBtn">+ Nuevo</button>
+      </div>
+      <div class="receipt" id="clientesList"></div>
+    </div>
   </section>
 
   <!-- ================= CATÁLOGO (Servicios / Insumos / Categorías) ================= -->
@@ -807,7 +851,7 @@ input:checked + .slider::before{ transform:translateX(19px); background:var(--go
       <button class="chip active" data-subtab="servicios"><span class="ic" data-icon="scissors" data-icon-size="13" style="display:inline-flex; vertical-align:-2px; margin-right:4px;"></span>Servicios</button>
       <button class="chip" data-subtab="productos"><span class="ic" data-icon="bag" data-icon-size="13" style="display:inline-flex; vertical-align:-2px; margin-right:4px;"></span>Productos</button>
       <button class="chip" data-subtab="insumos"><span class="ic" data-icon="droplet" data-icon-size="13" style="display:inline-flex; vertical-align:-2px; margin-right:4px;"></span>Insumos</button>
-      <button class="chip" data-subtab="categorias"><span class="ic" data-icon="tag" data-icon-size="13" style="display:inline-flex; vertical-align:-2px; margin-right:4px;"></span>Categorías</button>
+      <button class="chip" data-subtab="categorias"><span class="ic" data-icon="tag" data-icon-size="13" style="display:inline-flex; vertical-align:-2px; margin-right:4px;"></span>Gastos</button>
       <button class="chip" data-subtab="unidades"><span class="ic" data-icon="ruler" data-icon-size="13" style="display:inline-flex; vertical-align:-2px; margin-right:4px;"></span>Unidades</button>
     </div>
 
@@ -1006,7 +1050,7 @@ input:checked + .slider::before{ transform:translateX(19px); background:var(--go
 <nav class="bottom-nav">
   <button class="nav-btn active" data-view="dashboard"><span class="ic" data-icon="home"></span>Inicio</button>
   <button class="nav-btn" data-view="citas"><span class="ic" data-icon="calendar"></span>Citas</button>
-  <button class="nav-btn accent" data-view="ingreso"><span class="ic" data-icon="plus"></span>Ventas</button>
+  <button class="nav-btn accent" data-view="ingreso"><span class="ic" data-icon="plus"></span>Movimiento</button>
   <button class="nav-btn" data-view="historial"><span class="ic" data-icon="clock"></span>Historial</button>
   <button class="nav-btn" id="moreNavBtn"><span class="ic" data-icon="more"></span>Más</button>
 </nav>
@@ -1014,8 +1058,7 @@ input:checked + .slider::before{ transform:translateX(19px); background:var(--go
 <div class="modal-overlay" id="moreSheetOverlay">
   <div class="modal">
     <h3 style="margin-bottom:14px;">Más opciones</h3>
-    <div class="more-sheet-grid">
-      <button type="button" class="more-sheet-item" data-view="gasto"><span class="ic" data-icon="minus"></span>Gasto</button>
+    <div class="more-sheet-grid" style="grid-template-columns:repeat(2, 1fr);">
       <button type="button" class="more-sheet-item" data-view="catalogo"><span class="ic" data-icon="book"></span>Catálogo</button>
       <button type="button" class="more-sheet-item" data-view="ajustes"><span class="ic" data-icon="settings"></span>Ajustes</button>
     </div>
@@ -1094,7 +1137,9 @@ input:checked + .slider::before{ transform:translateX(19px); background:var(--go
     units: 'aure_units',
     settings: 'aure_settings',
     cierres: 'aure_cierres',
-    citas: 'aure_citas'
+    aperturas: 'aure_aperturas',
+    citas: 'aure_citas',
+    clientes: 'aure_clientes'
   };
 
   const DEFAULT_SERVICES = [
@@ -1153,7 +1198,9 @@ input:checked + .slider::before{ transform:translateX(19px); background:var(--go
   let categories = load(DB_KEYS.categories, DEFAULT_CATEGORIES);
   let units = load(DB_KEYS.units, DEFAULT_UNITS);
   let cierres = load(DB_KEYS.cierres, []);
+  let aperturas = load(DB_KEYS.aperturas, []);
   let citas = load(DB_KEYS.citas, []);
+  let clientes = load(DB_KEYS.clientes, []);
   let settings = Object.assign({}, DEFAULT_SETTINGS, load(DB_KEYS.settings, {}));
   if(!load(DB_KEYS.services,null)) save(DB_KEYS.services, services);
   if(!load(DB_KEYS.insumos,null)) save(DB_KEYS.insumos, insumos);
@@ -1173,11 +1220,18 @@ input:checked + .slider::before{ transform:translateX(19px); background:var(--go
   }
 
   function uid(){ return 'id' + Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
-  function money(n){ return '$' + (Math.round(n*100)/100).toFixed(2); }
-  function todayLocalInput(){
-    const d = new Date();
+  function money(n){
+    const v = Number(n)||0;
+    const sign = v < 0 ? '-' : '';
+    return sign + '$' + (Math.round(Math.abs(v)*100)/100).toFixed(2);
+  }
+  function toLocalInputValue(date){
+    const d = new Date(date);
     d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
     return d.toISOString().slice(0,16);
+  }
+  function todayLocalInput(){
+    return toLocalInputValue(new Date());
   }
   function toast(msg){
     const t = document.getElementById('toast');
@@ -1188,7 +1242,7 @@ input:checked + .slider::before{ transform:translateX(19px); background:var(--go
   }
 
   /* ============== NAVEGACIÓN ============== */
-  const views = ['dashboard','ingreso','gasto','historial','catalogo','ajustes','citas'];
+  const views = ['dashboard','ingreso','historial','catalogo','ajustes','citas'];
   function goTo(view){
     views.forEach(v=>{
       document.getElementById('view-'+v).classList.toggle('active', v===view);
@@ -1199,8 +1253,11 @@ input:checked + .slider::before{ transform:translateX(19px); background:var(--go
     if(view==='dashboard') renderDashboard();
     if(view==='historial') renderHistory();
     if(view==='catalogo') renderCatalogo();
-    if(view==='ingreso'){ switchSaleType(saleType); document.getElementById('incomeDate').value = todayLocalInput(); }
-    if(view==='gasto'){ renderCategorySelect(); renderExpenseInsumoLink(); document.getElementById('expenseDate').value = todayLocalInput(); }
+    if(view==='ingreso'){
+      switchMovementType(movementType);
+      document.getElementById('incomeDate').value = todayLocalInput();
+      document.getElementById('expenseDate').value = todayLocalInput();
+    }
     if(view==='citas'){ renderCitasView(); }
     window.scrollTo(0,0);
   }
@@ -1247,7 +1304,14 @@ input:checked + .slider::before{ transform:translateX(19px); background:var(--go
   }
   function closeModal(){ modalOverlay.classList.remove('active'); }
   document.getElementById('modalCancel').addEventListener('click', closeModal);
-  modalOverlay.addEventListener('click', (e)=>{ if(e.target===modalOverlay) closeModal(); });
+  // NOTA IMPORTANTE: el modal de formularios (crear/editar) YA NO se cierra al
+  // tocar el fondo. Esto era la causa de un bug real: en móvil, al escribir en
+  // un campo el teclado reacomoda la pantalla y un toque ligeramente desviado
+  // caía en el fondo vacío, cerrando el modal y perdiendo los datos escritos.
+  // Ahora solo se cierra con el botón "Cancelar", tras Guardar, o con la tecla Esc.
+  document.addEventListener('keydown', (e)=>{
+    if(e.key==='Escape' && modalOverlay.classList.contains('active')) closeModal();
+  });
 
   /* ============== DASHBOARD ============== */
   let currentRange = 'day';
@@ -1432,6 +1496,20 @@ input:checked + .slider::before{ transform:translateX(19px); background:var(--go
   let selectedServiceId = null;
   let selectedProductId = null;
   let saleType = 'servicio';
+  let movementType = 'ingreso';
+
+  function switchMovementType(type){
+    movementType = type;
+    document.querySelectorAll('#movementTypeGroup button').forEach(b=>b.classList.toggle('active', b.dataset.val===type));
+    document.getElementById('ingresoFields').style.display = type==='ingreso' ? '' : 'none';
+    document.getElementById('gastoFields').style.display = type==='gasto' ? '' : 'none';
+    document.getElementById('movementTitle').textContent = type==='ingreso' ? 'Registrar venta' : 'Registrar gasto';
+    if(type==='ingreso'){ switchSaleType(saleType); }
+    else{ renderCategorySelect(); renderExpenseInsumoLink(); }
+  }
+  document.querySelectorAll('#movementTypeGroup button').forEach(b=>{
+    b.addEventListener('click', ()=>switchMovementType(b.dataset.val));
+  });
 
   function switchSaleType(type){
     saleType = type;
@@ -1476,7 +1554,9 @@ input:checked + .slider::before{ transform:translateX(19px); background:var(--go
     if(!selectedServiceId){
       wrap.querySelector('.svc').click();
     } else {
-      wrap.querySelector(`.svc[data-id="${selectedServiceId}"]`).classList.add('active');
+      const selBtn = wrap.querySelector(`.svc[data-id="${selectedServiceId}"]`);
+      selBtn.classList.add('active');
+      document.getElementById('incomeAmount').value = selBtn.dataset.price;
     }
   }
 
@@ -1517,7 +1597,7 @@ input:checked + .slider::before{ transform:translateX(19px); background:var(--go
       firstAvailable.click();
     } else if(selectedProductId){
       const sel = wrap.querySelector(`.svc[data-id="${selectedProductId}"]`);
-      if(sel) sel.classList.add('active');
+      if(sel){ sel.classList.add('active'); document.getElementById('incomeAmount').value = sel.dataset.price; }
     }
   }
 
@@ -1527,6 +1607,29 @@ input:checked + .slider::before{ transform:translateX(19px); background:var(--go
       b.classList.add('active');
     });
   });
+  /* Registra una venta de servicio y descuenta insumos por receta. Reutilizable
+     desde el formulario de Ventas y desde "Completar cita". Devuelve el nombre
+     del insumo si cruzó el umbral de stock bajo, o null si no aplica. */
+  function registerServiceSale(svc, amount, payment, dateISO, note){
+    const costSnapshot = serviceCost(svc);
+    income.push({
+      id: uid(), itemType:'servicio', serviceId: svc.id, serviceName: svc.name, price: amount,
+      cost: costSnapshot, payment, date: dateISO, note: note||''
+    });
+    save(DB_KEYS.income, income);
+    const recipe = svc.recipe || [];
+    let lowStockHit = null;
+    recipe.forEach(r=>{
+      const ins = insumos.find(i=>i.id===r.insumoId);
+      if(!ins) return;
+      const wasLow = Number(ins.stock) <= Number(ins.minStock);
+      ins.stock = Math.max(0, Number(ins.stock) - Number(r.qty));
+      const nowLow = Number(ins.stock) <= Number(ins.minStock);
+      if(nowLow && !wasLow) lowStockHit = ins.name;
+    });
+    if(recipe.length>0) save(DB_KEYS.insumos, insumos);
+    return lowStockHit;
+  }
   document.getElementById('saveIncomeBtn').addEventListener('click', ()=>{
     const amount = parseFloat(document.getElementById('incomeAmount').value);
     const dateVal = document.getElementById('incomeDate').value;
@@ -1538,24 +1641,7 @@ input:checked + .slider::before{ transform:translateX(19px); background:var(--go
     if(saleType==='servicio'){
       const svc = services.find(s=>s.id===selectedServiceId);
       if(!svc){ toast('Selecciona un servicio'); return; }
-      const costSnapshot = serviceCost(svc);
-      income.push({
-        id: uid(), itemType:'servicio', serviceId: svc.id, serviceName: svc.name, price: amount,
-        cost: costSnapshot, payment: payBtn.dataset.val, date: new Date(dateVal).toISOString(), note
-      });
-      save(DB_KEYS.income, income);
-      // Descuenta automáticamente los insumos usados por este servicio, según su receta
-      const recipe = svc.recipe || [];
-      let lowStockHit = null;
-      recipe.forEach(r=>{
-        const ins = insumos.find(i=>i.id===r.insumoId);
-        if(!ins) return;
-        const wasLow = Number(ins.stock) <= Number(ins.minStock);
-        ins.stock = Math.max(0, Number(ins.stock) - Number(r.qty));
-        const nowLow = Number(ins.stock) <= Number(ins.minStock);
-        if(nowLow && !wasLow) lowStockHit = ins.name;
-      });
-      if(recipe.length>0) save(DB_KEYS.insumos, insumos);
+      const lowStockHit = registerServiceSale(svc, amount, payBtn.dataset.val, new Date(dateVal).toISOString(), note);
       toast(lowStockHit ? `Venta registrada ✓ · ⚠ Stock bajo: ${lowStockHit}` : 'Venta registrada ✓');
     } else {
       const prod = products.find(p=>p.id===selectedProductId);
@@ -1690,10 +1776,13 @@ input:checked + .slider::before{ transform:translateX(19px); background:var(--go
     bindDeleteButtons('historyList');
   }
 
-  /* ============== CIERRE DE CAJA DIARIO ============== */
+  /* ============== APERTURA Y CIERRE DE CAJA DIARIO ============== */
   function dateKeyLocal(d){
     const dt = new Date(d);
     return new Date(dt.getTime() - dt.getTimezoneOffset()*60000).toISOString().slice(0,10);
+  }
+  function todaysApertura(){
+    return aperturas.find(a=>a.dateKey===dateKeyLocal(new Date()));
   }
   function todaysBreakdown(){
     const start = startOfRange('day');
@@ -1704,24 +1793,72 @@ input:checked + .slider::before{ transform:translateX(19px); background:var(--go
     const incCard = inc.filter(t=>t.payment==='Tarjeta').reduce((a,b)=>a+Number(b.price),0);
     const expCash = exp.filter(t=>t.payment==='Efectivo').reduce((a,b)=>a+Number(b.amount),0);
     const expCard = exp.filter(t=>t.payment==='Tarjeta').reduce((a,b)=>a+Number(b.amount),0);
+    const apertura = todaysApertura();
+    const montoInicial = apertura ? Number(apertura.montoInicial) : 0;
     return {
-      incCash, incCard, expCash, expCard,
-      expectedCash: incCash - expCash,
+      incCash, incCard, expCash, expCard, montoInicial,
+      expectedCash: montoInicial + incCash - expCash,
       totalIncome: incCash+incCard, totalExpense: expCash+expCard,
       txCount: inc.length+exp.length
     };
   }
+  function renderCashButtons(){
+    const apertura = todaysApertura();
+    const openBtn = document.getElementById('openCashBtn');
+    openBtn.innerHTML = apertura
+      ? `${icon('lock',15)} Caja abierta: ${money(apertura.montoInicial)}`
+      : `${icon('lock',15)} Abrir caja`;
+    renderCajaStatus();
+  }
+  function renderCajaStatus(){
+    const apertura = todaysApertura();
+    const todayKey = dateKeyLocal(new Date());
+    const cerradaHoy = cierres.some(c=>c.dateKey===todayKey);
+    const b = todaysBreakdown();
+    const statusEl = document.getElementById('cajaStatusText');
+    if(cerradaHoy){
+      statusEl.textContent = 'Caja cerrada hoy ✓';
+      statusEl.style.color = 'var(--muted)';
+    } else if(apertura){
+      statusEl.textContent = `Abierta con ${money(apertura.montoInicial)}`;
+      statusEl.style.color = 'var(--green-bright)';
+    } else {
+      statusEl.textContent = 'Caja no abierta';
+      statusEl.style.color = 'var(--red-bright)';
+    }
+    document.getElementById('cajaExpectedText').textContent = money(b.expectedCash);
+  }
+  document.getElementById('openCashBtn').addEventListener('click', ()=>{
+    const existing = todaysApertura();
+    openModal({
+      title: existing ? 'Actualizar fondo inicial' : 'Abrir caja',
+      body: 'Cuánto efectivo hay en la caja al empezar el día (fondo para dar cambio, etc).',
+      formHtml: `<div class="form-group"><label>Monto inicial</label><div class="amount-input-wrap"><span class="currency">$</span>
+        <input type="number" step="0.01" min="0" class="form-control" id="aperturaMonto" value="${existing?existing.montoInicial:''}" placeholder="0.00"></div></div>`,
+      confirmText:'Abrir caja',
+      onConfirm:()=>{
+        const monto = parseFloat(document.getElementById('aperturaMonto').value);
+        if(isNaN(monto) || monto<0){ toast('Ingresa un monto válido'); return; }
+        const todayKey = dateKeyLocal(new Date());
+        if(existing){ existing.montoInicial = monto; existing.date = new Date().toISOString(); }
+        else{ aperturas.push({id:uid(), dateKey:todayKey, date:new Date().toISOString(), montoInicial:monto}); }
+        save(DB_KEYS.aperturas, aperturas);
+        closeModal(); syncAll(); toast('Caja abierta ✓');
+      }
+    });
+  });
   document.getElementById('closeCashBtn').addEventListener('click', ()=>{
     const b = todaysBreakdown();
     const todayKey = dateKeyLocal(new Date());
     const alreadyClosed = cierres.some(c=>c.dateKey===todayKey);
-    if(b.txCount===0){ toast('No hay movimientos registrados hoy'); return; }
+    if(b.txCount===0 && b.montoInicial===0){ toast('No hay movimientos ni apertura registrados hoy'); return; }
     const todayLabel = new Date().toLocaleDateString('es', {weekday:'long', day:'numeric', month:'long'});
     openModal({
       title:'Cierre de caja',
       body: todayLabel.charAt(0).toUpperCase()+todayLabel.slice(1),
       formHtml:`
         <div style="font-size:13.5px; line-height:2; margin:4px 0 14px;">
+          <div style="display:flex; justify-content:space-between;"><span style="color:var(--muted);">Fondo inicial (apertura)</span><span class="num" style="color:var(--gold-bright);">${money(b.montoInicial)}</span></div>
           <div style="display:flex; justify-content:space-between;"><span style="color:var(--muted);">Ingresos efectivo</span><span class="num" style="color:var(--green-bright);">${money(b.incCash)}</span></div>
           <div style="display:flex; justify-content:space-between;"><span style="color:var(--muted);">Ingresos tarjeta</span><span class="num" style="color:var(--green-bright);">${money(b.incCard)}</span></div>
           <div style="display:flex; justify-content:space-between;"><span style="color:var(--muted);">Gastos efectivo</span><span class="num" style="color:var(--red-bright);">−${money(b.expCash)}</span></div>
@@ -1744,13 +1881,13 @@ input:checked + .slider::before{ transform:translateX(19px); background:var(--go
         const difference = (counted!==null && !isNaN(counted)) ? (counted - b.expectedCash) : null;
         cierres.push({
           id: uid(), dateKey: todayKey, date: new Date().toISOString(),
+          montoInicial: b.montoInicial,
           incCash: b.incCash, incCard: b.incCard, expCash: b.expCash, expCard: b.expCard,
           expectedCash: b.expectedCash, totalIncome: b.totalIncome, totalExpense: b.totalExpense,
           cashCounted: counted, difference
         });
         save(DB_KEYS.cierres, cierres);
-        closeModal();
-        toast('Caja cerrada ✓');
+        closeModal(); syncAll(); toast('Caja cerrada ✓');
       }
     });
   });
@@ -1775,7 +1912,7 @@ input:checked + .slider::before{ transform:translateX(19px); background:var(--go
         <div class="tx-body">
           <div class="tx-title">Cierre de caja</div>
           <div class="tx-meta">${label}</div>
-          <div class="meta-line num">Ingresos ${money(c.totalIncome)} · Gastos ${money(c.totalExpense)} · Efvo. esperado ${money(c.expectedCash)}</div>
+          <div class="meta-line num">Fondo ${money(c.montoInicial||0)} · Ingresos ${money(c.totalIncome)} · Gastos ${money(c.totalExpense)} · Efvo. esperado ${money(c.expectedCash)}</div>
           ${diffLine}
         </div>
         <button class="tx-del" data-cierre-id="${c.id}" aria-label="Eliminar cierre">${icon('close',15)}</button>
@@ -1808,6 +1945,7 @@ input:checked + .slider::before{ transform:translateX(19px); background:var(--go
     if(document.getElementById('view-dashboard').classList.contains('active')){ renderChart7(); }
     renderRecent();
     renderCitasHoy();
+    renderCashButtons();
     if(document.getElementById('view-historial').classList.contains('active')){ renderHistory(); }
     renderServicesView();
     renderProductsView();
@@ -1816,7 +1954,9 @@ input:checked + .slider::before{ transform:translateX(19px); background:var(--go
     renderUnitsView();
     renderCategorySelect();
     renderExpenseInsumoLink();
-    if(document.getElementById('view-citas').classList.contains('active')){ renderCitasView(); }
+    if(document.getElementById('view-citas').classList.contains('active')){
+      if(citasSubtab==='clientes') renderClientesView(); else renderCitasView();
+    }
   }
 
   /* ============== CATÁLOGO: SERVICIOS · INSUMOS · CATEGORÍAS (CRUD completo) ============== */
@@ -1919,8 +2059,12 @@ input:checked + .slider::before{ transform:translateX(19px); background:var(--go
   function citaFormHtml(c){
     c = c || {clientName:'', clientPhone:'', serviceId:'', date:'', status:'pendiente', notes:''};
     const svcOptions = `<option value="">Sin servicio específico</option>` + services.map(s=>`<option value="${s.id}" ${s.id===c.serviceId?'selected':''}>${escapeHtml(s.name)}</option>`).join('');
-    const dateVal = c.date ? new Date(c.date).toISOString().slice(0,16) : todayLocalInput();
-    return `<div class="form-group"><label>Nombre del cliente</label><input class="form-control" id="fcName" value="${escapeHtml(c.clientName)}" placeholder="Ej. Juan Pérez"></div>
+    const dateVal = c.date ? toLocalInputValue(c.date) : todayLocalInput();
+    const clientesOptions = clientes.map(cl=>`<option value="${escapeHtml(cl.name)}">`).join('');
+    return `<div class="form-group"><label>Nombre del cliente</label>
+        <input class="form-control" id="fcName" list="clientesDatalist" value="${escapeHtml(c.clientName)}" placeholder="Escribe o elige un cliente existente" autocomplete="off">
+        <datalist id="clientesDatalist">${clientesOptions}</datalist>
+      </div>
       <div class="form-group"><label>Teléfono</label><input type="tel" class="form-control" id="fcPhone" value="${escapeHtml(c.clientPhone||'')}" placeholder="(000) 000-0000" maxlength="14"></div>
       <div class="form-group"><label>Servicio</label><select class="form-control" id="fcService">${svcOptions}</select></div>
       <div class="form-group"><label>Fecha y hora</label><input type="datetime-local" class="form-control" id="fcDate" value="${dateVal}"></div>
@@ -1931,6 +2075,20 @@ input:checked + .slider::before{ transform:translateX(19px); background:var(--go
         <option value="cancelada" ${c.status==='cancelada'?'selected':''}>Cancelada</option>
       </select></div>
       <div class="form-group"><label>Notas (opcional)</label><input class="form-control" id="fcNotes" value="${escapeHtml(c.notes||'')}" placeholder="Ej. Prefiere corte con máquina 2"></div>`;
+  }
+  /* Crea o actualiza el cliente en segundo plano al guardar una cita — el
+     operador nunca tiene que "gestionar clientes" a mano, se construye solo. */
+  function upsertClienteFromCita(name, phone){
+    if(!name) return;
+    const existing = clientes.find(cl=>cl.name.trim().toLowerCase()===name.trim().toLowerCase());
+    if(existing){
+      if(phone && !existing.phone) existing.phone = phone;
+      existing.lastVisit = new Date().toISOString();
+      existing.visitCount = (existing.visitCount||0) + 1;
+    } else {
+      clientes.push({id:uid(), name, phone: phone||'', notes:'', createdAt:new Date().toISOString(), lastVisit:new Date().toISOString(), visitCount:1});
+    }
+    save(DB_KEYS.clientes, clientes);
   }
   function openCitaModal(existing){
     openModal({
@@ -1952,11 +2110,20 @@ input:checked + .slider::before{ transform:translateX(19px); background:var(--go
           citas.push({id:uid(), clientName, clientPhone, serviceId: serviceId||null, serviceName: svc?svc.name:null, date:new Date(dateVal).toISOString(), status, notes});
         }
         save(DB_KEYS.citas, citas);
-        closeModal(); syncAll(); renderCitasHoy(); toast(existing?'Cita actualizada ✓':'Cita agendada ✓');
+        upsertClienteFromCita(clientName, clientPhone);
+        closeModal(); syncAll(); toast(existing?'Cita actualizada ✓':'Cita agendada ✓');
       }
     });
     const phoneInput = document.getElementById('fcPhone');
     if(phoneInput) formatPhoneInput(phoneInput);
+    // Si elige un cliente ya existente del autocompletado, rellena su teléfono solo
+    const nameInput = document.getElementById('fcName');
+    if(nameInput){
+      nameInput.addEventListener('input', ()=>{
+        const match = clientes.find(cl=>cl.name.toLowerCase()===nameInput.value.trim().toLowerCase());
+        if(match && match.phone && !phoneInput.value){ phoneInput.value = match.phone; }
+      });
+    }
   }
   document.getElementById('addCitaBtn').addEventListener('click', ()=>openCitaModal(null));
   function deleteCita(id){
@@ -1966,27 +2133,135 @@ input:checked + .slider::before{ transform:translateX(19px); background:var(--go
       onConfirm:()=>{
         citas = citas.filter(c=>c.id!==id);
         save(DB_KEYS.citas, citas);
-        closeModal(); syncAll(); renderCitasHoy(); toast('Cita eliminada');
+        closeModal(); syncAll(); toast('Cita eliminada');
       }
     });
   }
+
+  /* ---------- Sub-pestañas de Citas: Agenda / Clientes ---------- */
+  let citasSubtab = 'agenda';
+  document.querySelectorAll('.chip[data-citas-subtab]').forEach(chip=>{
+    chip.addEventListener('click', ()=>{
+      citasSubtab = chip.dataset.citasSubtab;
+      document.querySelectorAll('.chip[data-citas-subtab]').forEach(c=>c.classList.toggle('active', c===chip));
+      document.getElementById('citasPanel-agenda').style.display = citasSubtab==='agenda' ? '' : 'none';
+      document.getElementById('citasPanel-clientes').style.display = citasSubtab==='clientes' ? '' : 'none';
+      if(citasSubtab==='clientes') renderClientesView(); else renderCitasView();
+    });
+  });
+
+  /* ---------- CLIENTES (Create, Read, Update, Delete) ---------- */
+  function renderClientesView(){
+    const wrap = document.getElementById('clientesList');
+    if(clientes.length===0){
+      wrap.innerHTML = `<div class="empty-state"><div class="glyph">${icon('user',28)}</div><p>Aún no hay clientes registrados. Se agregan solos al crear una cita, o puedes añadir uno aquí.</p></div>`;
+      return;
+    }
+    const sorted = [...clientes].sort((a,b)=> new Date(b.lastVisit||b.createdAt) - new Date(a.lastVisit||a.createdAt));
+    wrap.innerHTML = sorted.map(cl=>{
+      const lastVisit = cl.lastVisit ? new Date(cl.lastVisit).toLocaleDateString('es', {day:'2-digit', month:'short', year:'numeric'}) : '—';
+      return `<div class="cita-row">
+        <div class="cita-time" style="width:auto; padding-right:4px;">${icon('user',20)}</div>
+        <div class="cita-body">
+          <div class="name">${escapeHtml(cl.name)}</div>
+          <div class="meta">${escapeHtml(cl.phone||'Sin teléfono')} · ${cl.visitCount||0} cita(s) · última: ${lastVisit}</div>
+        </div>
+        <div class="row-actions">
+          <button class="icon-btn" data-edit-cliente="${cl.id}" aria-label="Editar cliente">${icon('edit',15)}</button>
+          <button class="icon-btn" data-del-cliente="${cl.id}" aria-label="Eliminar cliente">${icon('trash',15)}</button>
+        </div>
+      </div>`;
+    }).join('');
+    wrap.querySelectorAll('[data-edit-cliente]').forEach(b=>b.addEventListener('click', ()=>openClienteModal(clientes.find(cl=>cl.id===b.dataset.editCliente))));
+    wrap.querySelectorAll('[data-del-cliente]').forEach(b=>b.addEventListener('click', ()=>deleteCliente(b.dataset.delCliente)));
+  }
+  function clienteFormHtml(cl){
+    cl = cl || {name:'', phone:'', notes:''};
+    return `<div class="form-group"><label>Nombre</label><input class="form-control" id="fclName" value="${escapeHtml(cl.name)}" placeholder="Ej. María González"></div>
+      <div class="form-group"><label>Teléfono</label><input type="tel" class="form-control" id="fclPhone" value="${escapeHtml(cl.phone||'')}" placeholder="(000) 000-0000" maxlength="14"></div>
+      <div class="form-group"><label>Notas (opcional)</label><input class="form-control" id="fclNotes" value="${escapeHtml(cl.notes||'')}" placeholder="Ej. Alérgico a cierto tinte"></div>`;
+  }
+  function openClienteModal(existing){
+    openModal({
+      title: existing ? 'Editar cliente' : 'Nuevo cliente',
+      formHtml: clienteFormHtml(existing), confirmText:'Guardar',
+      onConfirm:()=>{
+        const name = document.getElementById('fclName').value.trim();
+        const phone = document.getElementById('fclPhone').value.trim();
+        const notes = document.getElementById('fclNotes').value.trim();
+        if(!name){ toast('Escribe un nombre'); return; }
+        if(!existing && isDuplicateName(clientes, name)){ toast('Ya existe un cliente con ese nombre'); return; }
+        if(existing){ Object.assign(existing, {name, phone, notes}); }
+        else{ clientes.push({id:uid(), name, phone, notes, createdAt:new Date().toISOString(), lastVisit:null, visitCount:0}); }
+        save(DB_KEYS.clientes, clientes);
+        closeModal(); renderClientesView(); toast(existing?'Cliente actualizado ✓':'Cliente agregado ✓');
+      }
+    });
+    const phoneInput = document.getElementById('fclPhone');
+    if(phoneInput) formatPhoneInput(phoneInput);
+  }
+  document.getElementById('addClienteBtn').addEventListener('click', ()=>openClienteModal(null));
+  function deleteCliente(id){
+    openModal({
+      title:'Eliminar cliente', body:'Las citas ya registradas con este cliente no se verán afectadas, solo desaparecerá de tu lista.',
+      confirmText:'Eliminar', danger:true,
+      onConfirm:()=>{
+        clientes = clientes.filter(cl=>cl.id!==id);
+        save(DB_KEYS.clientes, clientes);
+        closeModal(); renderClientesView(); toast('Cliente eliminado');
+      }
+    });
+  }
+
   function completeCita(id){
     const c = citas.find(x=>x.id===id);
     if(!c) return;
+    const svc = c.serviceId ? services.find(s=>s.id===c.serviceId) : null;
+
+    if(!svc){
+      // Sin servicio vinculado: solo se marca como completada, no hay nada que vender.
+      openModal({
+        title:'Marcar cita como completada', body:'Esta cita no tiene un servicio vinculado, así que no se registrará ninguna venta.',
+        confirmText:'Completar',
+        onConfirm:()=>{
+          c.status = 'completada';
+          save(DB_KEYS.citas, citas);
+          closeModal(); syncAll(); toast('Cita completada ✓');
+        }
+      });
+      return;
+    }
+
+    // Con servicio vinculado: completar y registrar la venta en un solo paso.
     openModal({
-      title:'Marcar cita como completada',
-      body: c.serviceId ? 'Se marcará como completada. Después puedes registrar la venta en la pestaña Ventas con el servicio ya seleccionado.' : 'Se marcará como completada.',
-      confirmText:'Completar',
+      title:'Completar cita y registrar venta',
+      body:`${escapeHtml(c.clientName)} · ${escapeHtml(svc.name)}`,
+      formHtml:`
+        <div class="form-group"><label>Precio cobrado</label><div class="amount-input-wrap"><span class="currency">$</span>
+          <input type="number" step="0.01" min="0" class="form-control" id="ccAmount" value="${svc.price}" placeholder="0.00"></div></div>
+        <div class="form-group"><label>Método de pago</label>
+          <div class="pay-method-group" id="ccPayGroup">
+            <button type="button" data-val="Efectivo" class="active"><span class="ic">${icon('cash',15)}</span> Efectivo</button>
+            <button type="button" data-val="Tarjeta"><span class="ic">${icon('card',15)}</span> Tarjeta</button>
+          </div>
+        </div>`,
+      confirmText:'Completar y cobrar',
       onConfirm:()=>{
+        const amount = parseFloat(document.getElementById('ccAmount').value);
+        const payBtn = document.querySelector('#ccPayGroup button.active');
+        if(isNaN(amount) || amount<=0){ toast('Ingresa un precio válido'); return; }
         c.status = 'completada';
         save(DB_KEYS.citas, citas);
-        closeModal(); syncAll(); renderCitasHoy(); toast('Cita completada ✓');
-        if(c.serviceId){
-          selectedServiceId = c.serviceId;
-          saleType = 'servicio';
-          goTo('ingreso');
-        }
+        const lowStockHit = registerServiceSale(svc, amount, payBtn.dataset.val, new Date().toISOString(), `Cita: ${c.clientName}`);
+        closeModal(); syncAll();
+        toast(lowStockHit ? `Cita completada y venta registrada ✓ · ⚠ Stock bajo: ${lowStockHit}` : 'Cita completada y venta registrada ✓');
       }
+    });
+    document.querySelectorAll('#ccPayGroup button').forEach(b=>{
+      b.addEventListener('click', ()=>{
+        document.querySelectorAll('#ccPayGroup button').forEach(x=>x.classList.remove('active'));
+        b.classList.add('active');
+      });
     });
   }
 
@@ -2034,9 +2309,13 @@ input:checked + .slider::before{ transform:translateX(19px); background:var(--go
 
   function openServiceModal(existingService){
     const isEdit = !!existingService;
+    const originalRecipe = existingService && existingService.recipe ? JSON.parse(JSON.stringify(existingService.recipe)) : [];
+    // Si algún insumo de la receta fue eliminado del catálogo mientras tanto,
+    // se descarta esa fila en vez de mostrar/guardar el insumo equivocado.
+    let recipe = originalRecipe.filter(r=>insumos.some(ins=>ins.id===r.insumoId));
+    const droppedCount = originalRecipe.length - recipe.length;
     let name = existingService ? existingService.name : '';
     let price = existingService ? existingService.price : '';
-    let recipe = existingService && existingService.recipe ? JSON.parse(JSON.stringify(existingService.recipe)) : [];
 
     function recipeRowHtml(r, i){
       const opts = insumos.map(ins=>`<option value="${ins.id}" ${ins.id===r.insumoId?'selected':''}>${escapeHtml(ins.name)}</option>`).join('');
@@ -2101,6 +2380,7 @@ input:checked + .slider::before{ transform:translateX(19px); background:var(--go
         closeModal(); syncAll(); toast(isEdit?'Servicio actualizado ✓':'Servicio agregado ✓');
       }
     });
+    if(droppedCount>0){ toast(`Se quitaron ${droppedCount} insumo(s) de la receta porque ya no existen en el catálogo`); }
     attachHandlers();
   }
 
@@ -2543,7 +2823,7 @@ input:checked + .slider::before{ transform:translateX(19px); background:var(--go
     el.textContent = settings.lastBackup ? new Date(settings.lastBackup).toLocaleString('es') : 'Nunca';
   }
   function doExport(){
-    const payload = { services, insumos, products, income, expenses, categories, units, cierres, citas, exportedAt: new Date().toISOString(), app:'Aure Barbershop', version:5 };
+    const payload = { services, insumos, products, income, expenses, categories, units, cierres, aperturas, citas, clientes, exportedAt: new Date().toISOString(), app:'Aure Barbershop', version:7 };
     const blob = new Blob([JSON.stringify(payload,null,2)], {type:'application/json'});
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -2583,11 +2863,13 @@ input:checked + .slider::before{ transform:translateX(19px); background:var(--go
             categories = data.categories || DEFAULT_CATEGORIES;
             units = data.units || DEFAULT_UNITS;
             cierres = data.cierres || [];
+            aperturas = data.aperturas || [];
             citas = data.citas || [];
+            clientes = data.clientes || [];
             if(categories.length===0) categories = DEFAULT_CATEGORIES.slice();
             if(units.length===0) units = DEFAULT_UNITS.slice();
             save(DB_KEYS.services, services); save(DB_KEYS.insumos, insumos); save(DB_KEYS.products, products); save(DB_KEYS.income, income);
-            save(DB_KEYS.expenses, expenses); save(DB_KEYS.categories, categories); save(DB_KEYS.units, units); save(DB_KEYS.cierres, cierres); save(DB_KEYS.citas, citas);
+            save(DB_KEYS.expenses, expenses); save(DB_KEYS.categories, categories); save(DB_KEYS.units, units); save(DB_KEYS.cierres, cierres); save(DB_KEYS.aperturas, aperturas); save(DB_KEYS.citas, citas); save(DB_KEYS.clientes, clientes);
             closeModal(); toast('Datos restaurados ✓');
             syncAll();
           }
@@ -2949,6 +3231,7 @@ input:checked + .slider::before{ transform:translateX(19px); background:var(--go
   updateLastBackupText();
   checkReminder();
   renderDashboard();
+  renderCashButtons();
   document.getElementById('accountUsernameDisplay').textContent = settings.username || '—';
   updateSecurityQuestionDisplay();
   renderStaticIcons();
