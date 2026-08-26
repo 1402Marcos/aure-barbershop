@@ -448,6 +448,30 @@ input:checked + .slider::before{ transform:translateX(19px); background:var(--go
 .insumo-row .meta{ font-size:12px; color:var(--muted-2); margin-top:2px; font-family:var(--font-mono); }
 
 /* ---------- Citas ---------- */
+/* ---------- Vista semanal de citas ---------- */
+.week-nav{
+  display:flex; align-items:center; justify-content:space-between;
+  margin-bottom:12px; padding:0 2px;
+}
+.week-nav .week-label{ font-size:13.5px; font-weight:700; color:var(--cream); text-transform:capitalize; }
+.day-tabs{
+  display:grid; grid-template-columns:repeat(7, 1fr); gap:5px; margin-bottom:16px;
+}
+.day-tab{
+  display:flex; flex-direction:column; align-items:center; gap:2px;
+  padding:8px 2px 7px; border-radius:9px; border:1.5px solid var(--border);
+  background:var(--surface-2); cursor:pointer; position:relative;
+}
+.day-tab .d{ font-size:9.5px; color:var(--muted-2); text-transform:uppercase; letter-spacing:.03em; }
+.day-tab .n{ font-size:15px; font-weight:700; color:var(--cream); font-family:var(--font-mono); }
+.day-tab.today{ border-color:var(--gold); }
+.day-tab.today .n{ color:var(--gold-bright); }
+.day-tab.active{ background:rgba(24,168,120,.16); border-color:var(--green); }
+.day-tab.active .n, .day-tab.active .d{ color:var(--green-bright); }
+.day-tab .dot{
+  width:5px; height:5px; border-radius:50%; background:var(--gold-bright); margin-top:1px;
+}
+
 .cita-row{
   display:flex; align-items:flex-start; gap:12px; padding:13px 0; border-bottom:1px dashed var(--border);
 }
@@ -579,7 +603,7 @@ input:checked + .slider::before{ transform:translateX(19px); background:var(--go
     <button type="button" id="lockCancelBtn" class="btn-secondary" style="display:none;">Cancelar</button>
   </form>
   <p class="lock-hint" id="lockHint"></p>
-  <p style="font-size:10.5px; color:var(--muted-2); margin-top:20px;">Build 2026.08.26-4</p>
+  <p style="font-size:10.5px; color:var(--muted-2); margin-top:20px;">Build 2026.08.26-5</p>
 </div>
 
 <div class="app">
@@ -852,11 +876,30 @@ input:checked + .slider::before{ transform:translateX(19px); background:var(--go
     <!-- Agenda -->
     <div class="subtab-panel" id="citasPanel-agenda">
       <div class="filter-row">
-        <button class="chip active" data-cita-filter="proximas">Próximas</button>
-        <button class="chip" data-cita-filter="hoy">Hoy</button>
-        <button class="chip" data-cita-filter="completadas">Completadas</button>
-        <button class="chip" data-cita-filter="todas">Todas</button>
+        <button class="chip active" data-cita-view="estado">Por estado</button>
+        <button class="chip" data-cita-view="semana">Por día de semana</button>
       </div>
+
+      <!-- Vista por estado -->
+      <div id="citaViewEstado">
+        <div class="filter-row">
+          <button class="chip active" data-cita-filter="proximas">Próximas</button>
+          <button class="chip" data-cita-filter="hoy">Hoy</button>
+          <button class="chip" data-cita-filter="completadas">Completadas</button>
+          <button class="chip" data-cita-filter="todas">Todas</button>
+        </div>
+      </div>
+
+      <!-- Vista por día de la semana -->
+      <div id="citaViewSemana" style="display:none;">
+        <div class="week-nav">
+          <button type="button" id="weekPrevBtn" class="icon-btn" aria-label="Semana anterior">‹</button>
+          <span class="week-label" id="weekLabel">—</span>
+          <button type="button" id="weekNextBtn" class="icon-btn" aria-label="Semana siguiente">›</button>
+        </div>
+        <div class="day-tabs" id="dayTabs"></div>
+      </div>
+
       <div class="receipt" id="citasList"></div>
     </div>
 
@@ -932,7 +975,7 @@ input:checked + .slider::before{ transform:translateX(19px); background:var(--go
   <section id="view-ajustes" class="view">
     <div class="receipt tone-gold" style="text-align:center; padding:12px; margin-bottom:16px;">
       <span style="font-size:11px; color:var(--muted);">Versión instalada:</span>
-      <span class="num" style="font-size:14px; font-weight:700; color:var(--gold-bright); display:block;">Build 2026.08.26-4</span>
+      <span class="num" style="font-size:14px; font-weight:700; color:var(--gold-bright); display:block;">Build 2026.08.26-5</span>
     </div>
     <div class="section-title"><h2>Apariencia</h2></div>
     <div class="receipt">
@@ -1071,7 +1114,7 @@ input:checked + .slider::before{ transform:translateX(19px); background:var(--go
     </div>
 
     <p style="font-size:11.5px; color:var(--muted-2); text-align:center; margin-top:18px; line-height:1.6;">
-      Aure Barbershop · Build <b id="buildVersionFooter" style="color:var(--gold-bright);">2026.08.26-4</b><br>
+      Aure Barbershop · Build <b id="buildVersionFooter" style="color:var(--gold-bright);">2026.08.26-5</b><br>
       Tus datos se guardan solo en este teléfono.<br>Exporta un respaldo con frecuencia.
     </p>
   </section>
@@ -2174,6 +2217,10 @@ input:checked + .slider::before{ transform:translateX(19px); background:var(--go
     return {pendiente:'Pendiente', confirmada:'Confirmada', completada:'Completada', cancelada:'Cancelada'}[s] || s;
   }
   let citaFilter = 'proximas';
+  let citaView = 'estado';
+  let weekOffset = 0;
+  let selectedDayIndex = null; // 0=Lunes...6=Domingo; null = aún sin definir
+
   document.querySelectorAll('.chip[data-cita-filter]').forEach(chip=>{
     chip.addEventListener('click', ()=>{
       document.querySelectorAll('.chip[data-cita-filter]').forEach(c=>c.classList.remove('active'));
@@ -2182,20 +2229,70 @@ input:checked + .slider::before{ transform:translateX(19px); background:var(--go
       renderCitasView();
     });
   });
-  function renderCitasView(){
-    let list = [...citas];
-    if(citaFilter==='hoy'){
-      const start = startOfRange('day'); const next = new Date(start); next.setDate(next.getDate()+1);
-      list = list.filter(c=>{const d=new Date(c.date); return d>=start && d<next;});
-    } else if(citaFilter==='proximas'){
-      list = list.filter(c=> new Date(c.date) >= startOfRange('day') && c.status!=='completada' && c.status!=='cancelada');
-    } else if(citaFilter==='completadas'){
-      list = list.filter(c=>c.status==='completada');
+  document.querySelectorAll('.chip[data-cita-view]').forEach(chip=>{
+    chip.addEventListener('click', ()=>{
+      document.querySelectorAll('.chip[data-cita-view]').forEach(c=>c.classList.remove('active'));
+      chip.classList.add('active');
+      citaView = chip.dataset.citaView;
+      document.getElementById('citaViewEstado').style.display = citaView==='estado' ? '' : 'none';
+      document.getElementById('citaViewSemana').style.display = citaView==='semana' ? '' : 'none';
+      renderCitasView();
+    });
+  });
+  document.getElementById('weekPrevBtn').addEventListener('click', ()=>{ weekOffset--; renderCitasView(); });
+  document.getElementById('weekNextBtn').addEventListener('click', ()=>{ weekOffset++; renderCitasView(); });
+
+  function getMonday(date){
+    const d = new Date(date);
+    const day = (d.getDay()+6)%7; // lunes=0
+    d.setDate(d.getDate()-day);
+    d.setHours(0,0,0,0);
+    return d;
+  }
+  const DAY_NAMES_SHORT = ['Lun','Mar','Mié','Jue','Vie','Sáb','Dom'];
+  const DAY_NAMES_FULL = ['Lunes','Martes','Miércoles','Jueves','Viernes','Sábado','Domingo'];
+
+  /* Dibuja el navegador de semana + los 7 tabs de día, y devuelve la Date
+     exacta del día actualmente seleccionado (para que renderCitasView filtre). */
+  function renderWeekNav(){
+    const monday = getMonday(new Date());
+    monday.setDate(monday.getDate() + weekOffset*7);
+    const days = [];
+    for(let i=0;i<7;i++){ const d = new Date(monday); d.setDate(d.getDate()+i); days.push(d); }
+    const sunday = days[6];
+    const fmt = (d)=>d.toLocaleDateString('es', {day:'numeric', month:'short'});
+    const label = weekOffset===0 ? `Esta semana · ${fmt(monday)} – ${fmt(sunday)}` : `${fmt(monday)} – ${fmt(sunday)}`;
+    document.getElementById('weekLabel').textContent = label;
+
+    const todayKey = dateKeyLocal(new Date());
+    if(selectedDayIndex===null){
+      const todayIdx = days.findIndex(d=>dateKeyLocal(d)===todayKey);
+      selectedDayIndex = todayIdx>=0 ? todayIdx : 0;
     }
-    list.sort((a,b)=> new Date(a.date)-new Date(b.date));
+
+    document.getElementById('dayTabs').innerHTML = days.map((d,i)=>{
+      const key = dateKeyLocal(d);
+      const isToday = key===todayKey;
+      const count = citas.filter(c=>dateKeyLocal(c.date)===key && c.status!=='cancelada').length;
+      return `<button type="button" class="day-tab ${isToday?'today':''} ${i===selectedDayIndex?'active':''}" data-day-idx="${i}" aria-label="${DAY_NAMES_FULL[i]} ${d.getDate()}">
+        <span class="d">${DAY_NAMES_SHORT[i]}</span>
+        <span class="n">${d.getDate()}</span>
+        ${count>0 ? `<span class="dot"></span>` : ''}
+      </button>`;
+    }).join('');
+    document.querySelectorAll('.day-tab').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        selectedDayIndex = parseInt(btn.dataset.dayIdx,10);
+        renderCitasView();
+      });
+    });
+    return days[selectedDayIndex];
+  }
+
+  function renderCitaRows(list, emptyMsg){
     const wrap = document.getElementById('citasList');
     if(list.length===0){
-      wrap.innerHTML = `<div class="empty-state"><div class="glyph">${icon('calendar',28)}</div><p>No hay citas en este filtro.</p></div>`;
+      wrap.innerHTML = `<div class="empty-state"><div class="glyph">${icon('calendar',28)}</div><p>${emptyMsg}</p></div>`;
       return;
     }
     wrap.innerHTML = list.map(c=>{
@@ -2220,6 +2317,28 @@ input:checked + .slider::before{ transform:translateX(19px); background:var(--go
     wrap.querySelectorAll('[data-edit-cita]').forEach(b=>b.addEventListener('click', ()=>openCitaModal(citas.find(c=>c.id===b.dataset.editCita))));
     wrap.querySelectorAll('[data-del-cita]').forEach(b=>b.addEventListener('click', ()=>deleteCita(b.dataset.delCita)));
     wrap.querySelectorAll('[data-complete-cita]').forEach(b=>b.addEventListener('click', ()=>completeCita(b.dataset.completeCita)));
+  }
+
+  function renderCitasView(){
+    if(citaView==='semana'){
+      const selectedDate = renderWeekNav();
+      const key = dateKeyLocal(selectedDate);
+      const list = citas.filter(c=>dateKeyLocal(c.date)===key).sort((a,b)=> new Date(a.date)-new Date(b.date));
+      const dayFull = DAY_NAMES_FULL[selectedDayIndex];
+      renderCitaRows(list, `No hay citas agendadas para el ${dayFull.toLowerCase()} ${selectedDate.getDate()}.`);
+      return;
+    }
+    let list = [...citas];
+    if(citaFilter==='hoy'){
+      const start = startOfRange('day'); const next = new Date(start); next.setDate(next.getDate()+1);
+      list = list.filter(c=>{const d=new Date(c.date); return d>=start && d<next;});
+    } else if(citaFilter==='proximas'){
+      list = list.filter(c=> new Date(c.date) >= startOfRange('day') && c.status!=='completada' && c.status!=='cancelada');
+    } else if(citaFilter==='completadas'){
+      list = list.filter(c=>c.status==='completada');
+    }
+    list.sort((a,b)=> new Date(a.date)-new Date(b.date));
+    renderCitaRows(list, 'No hay citas en este filtro.');
   }
   function renderCitasHoy(){
     const start = startOfRange('day'); const next = new Date(start); next.setDate(next.getDate()+1);
