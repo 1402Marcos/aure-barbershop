@@ -603,7 +603,7 @@ input:checked + .slider::before{ transform:translateX(19px); background:var(--go
     <button type="button" id="lockCancelBtn" class="btn-secondary" style="display:none;">Cancelar</button>
   </form>
   <p class="lock-hint" id="lockHint"></p>
-  <p style="font-size:10.5px; color:var(--muted-2); margin-top:20px;">Build 2026.08.26-5</p>
+  <p style="font-size:10.5px; color:var(--muted-2); margin-top:20px;">Build 2026.08.26-6</p>
 </div>
 
 <div class="app">
@@ -975,7 +975,7 @@ input:checked + .slider::before{ transform:translateX(19px); background:var(--go
   <section id="view-ajustes" class="view">
     <div class="receipt tone-gold" style="text-align:center; padding:12px; margin-bottom:16px;">
       <span style="font-size:11px; color:var(--muted);">Versión instalada:</span>
-      <span class="num" style="font-size:14px; font-weight:700; color:var(--gold-bright); display:block;">Build 2026.08.26-5</span>
+      <span class="num" style="font-size:14px; font-weight:700; color:var(--gold-bright); display:block;">Build 2026.08.26-6</span>
     </div>
     <div class="section-title"><h2>Apariencia</h2></div>
     <div class="receipt">
@@ -1114,7 +1114,7 @@ input:checked + .slider::before{ transform:translateX(19px); background:var(--go
     </div>
 
     <p style="font-size:11.5px; color:var(--muted-2); text-align:center; margin-top:18px; line-height:1.6;">
-      Aure Barbershop · Build <b id="buildVersionFooter" style="color:var(--gold-bright);">2026.08.26-5</b><br>
+      Aure Barbershop · Build <b id="buildVersionFooter" style="color:var(--gold-bright);">2026.08.26-6</b><br>
       Tus datos se guardan solo en este teléfono.<br>Exporta un respaldo con frecuencia.
     </p>
   </section>
@@ -2355,7 +2355,10 @@ input:checked + .slider::before{ transform:translateX(19px); background:var(--go
   }
   function citaFormHtml(c){
     c = c || {clientName:'', clientPhone:'', serviceId:'', date:'', status:'pendiente', notes:''};
-    const svcOptions = `<option value="">Sin servicio específico</option>` + services.map(s=>`<option value="${s.id}" ${s.id===c.serviceId?'selected':''}>${escapeHtml(s.name)}</option>`).join('');
+    const svcOptions = services.length===0
+      ? `<option value="">— Agrega un servicio en Catálogo primero —</option>`
+      : (c.serviceId ? '' : `<option value="" disabled selected>Elige un servicio…</option>`) +
+        services.map(s=>`<option value="${s.id}" ${s.id===c.serviceId?'selected':''}>${escapeHtml(s.name)} · ${money(s.price)}</option>`).join('');
     const dateVal = c.date ? toLocalInputValue(c.date) : todayLocalInput();
     const clientesOptions = clientes.map(cl=>`<option value="${escapeHtml(cl.name)}">`).join('');
     // "Completada" nunca es una opción elegible a mano: solo se alcanza cobrando
@@ -2376,7 +2379,7 @@ input:checked + .slider::before{ transform:translateX(19px); background:var(--go
         <datalist id="clientesDatalist">${clientesOptions}</datalist>
       </div>
       <div class="form-group"><label>Teléfono</label><input type="tel" class="form-control" id="fcPhone" value="${escapeHtml(c.clientPhone||'')}" placeholder="(000) 000-0000" maxlength="14"></div>
-      <div class="form-group"><label>Servicio</label><select class="form-control" id="fcService">${svcOptions}</select></div>
+      <div class="form-group"><label>Servicio <span style="color:var(--red-bright);">*</span></label><select class="form-control" id="fcService" ${services.length===0?'disabled':''}>${svcOptions}</select></div>
       <div class="form-group"><label>Fecha y hora</label><input type="datetime-local" class="form-control" id="fcDate" value="${dateVal}"></div>
       ${statusField}
       <div class="form-group"><label>Notas (opcional)</label><input class="form-control" id="fcNotes" value="${escapeHtml(c.notes||'')}" placeholder="Ej. Prefiere corte con máquina 2"></div>`;
@@ -2396,6 +2399,15 @@ input:checked + .slider::before{ transform:translateX(19px); background:var(--go
     save(DB_KEYS.clientes, clientes);
   }
   function openCitaModal(existing){
+    if(services.length===0){
+      openModal({
+        title:'Agrega un servicio primero',
+        body:'Para agendar una cita necesitas al menos un servicio en tu catálogo — así queda claro qué se le va a cobrar al cliente cuando llegue.',
+        confirmText:'Ir a Catálogo',
+        onConfirm:()=>{ closeModal(); goTo('catalogo'); switchSubtab('servicios'); }
+      });
+      return;
+    }
     openModal({
       title: existing ? 'Editar cita' : 'Nueva cita',
       formHtml: citaFormHtml(existing), confirmText:'Guardar',
@@ -2408,15 +2420,36 @@ input:checked + .slider::before{ transform:translateX(19px); background:var(--go
         const status = document.getElementById('fcStatus').value;
         const notes = document.getElementById('fcNotes').value.trim();
         if(!clientName){ toast('Escribe el nombre del cliente'); return; }
+        if(!serviceId || !svc){ toast('Selecciona un servicio'); return; }
         if(!dateVal){ toast('Selecciona fecha y hora'); return; }
-        if(existing){
-          Object.assign(existing, {clientName, clientPhone, serviceId: serviceId||null, serviceName: svc?svc.name:null, date:new Date(dateVal).toISOString(), status, notes});
+
+        const isoDate = new Date(dateVal).toISOString();
+        const doSave = ()=>{
+          if(existing){
+            Object.assign(existing, {clientName, clientPhone, serviceId, serviceName: svc.name, date:isoDate, status, notes});
+          } else {
+            citas.push({id:uid(), clientName, clientPhone, serviceId, serviceName: svc.name, date:isoDate, status, notes});
+          }
+          save(DB_KEYS.citas, citas);
+          upsertClienteFromCita(clientName, clientPhone);
+          closeModal(); syncAll(); toast(existing?'Cita actualizada ✓':'Cita agendada ✓');
+        };
+
+        // Aviso (no bloqueo) si ya hay otra cita activa exactamente a la misma hora
+        const conflict = citas.find(c=>
+          c.id!==(existing?existing.id:null) && c.status!=='cancelada' && c.status!=='completada' &&
+          new Date(c.date).getTime()===new Date(isoDate).getTime()
+        );
+        if(conflict){
+          openModal({
+            title:'Ya hay una cita a esa hora',
+            body:`"${conflict.clientName}" ya está agendado(a) para ese mismo horario. ¿Agendar de todas formas?`,
+            confirmText:'Agendar igual', danger:true,
+            onConfirm: doSave
+          });
         } else {
-          citas.push({id:uid(), clientName, clientPhone, serviceId: serviceId||null, serviceName: svc?svc.name:null, date:new Date(dateVal).toISOString(), status, notes});
+          doSave();
         }
-        save(DB_KEYS.citas, citas);
-        upsertClienteFromCita(clientName, clientPhone);
-        closeModal(); syncAll(); toast(existing?'Cita actualizada ✓':'Cita agendada ✓');
       }
     });
     const phoneInput = document.getElementById('fcPhone');
@@ -2525,6 +2558,24 @@ input:checked + .slider::before{ transform:translateX(19px); background:var(--go
   function completeCita(id){
     const c = citas.find(x=>x.id===id);
     if(!c) return;
+
+    // No se puede cobrar/completar un servicio que todavía no se ha realizado.
+    // Se compara por día calendario (no por hora exacta), para permitir
+    // completarla en cualquier momento del día programado, incluso si el
+    // barbero terminó un poco antes o después de la hora exacta agendada.
+    const citaDayKey = dateKeyLocal(c.date);
+    const todayKey = dateKeyLocal(new Date());
+    if(citaDayKey > todayKey){
+      const d = new Date(c.date);
+      const fechaLbl = d.toLocaleDateString('es', {weekday:'long', day:'numeric', month:'long'});
+      openModal({
+        title:'Todavía no puedes cobrar esta cita',
+        body:`Esta cita es para el ${fechaLbl}, que aún no ha llegado. Podrás completarla y cobrarla a partir de ese día.`,
+        confirmText:'Entendido', onConfirm:closeModal
+      });
+      return;
+    }
+
     const svc = c.serviceId ? services.find(s=>s.id===c.serviceId) : null;
 
     if(!svc){
