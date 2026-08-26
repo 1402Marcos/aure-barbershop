@@ -70,13 +70,12 @@ html[data-theme="light"]{
 }
 
 *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
-html,body{margin:0; padding:0;}
+html,body{margin:0; padding:0; height:100%; overflow:hidden;}
+html{ }
 body{
   background:var(--bg);
   color:var(--cream);
   font-family:var(--font-body);
-  min-height:100vh;
-  min-height:100dvh;
   -webkit-font-smoothing:antialiased;
   overscroll-behavior-y:none;
 }
@@ -95,12 +94,24 @@ h1,h2,h3{ font-family:var(--font-display); font-weight:700; margin:0; letter-spa
 button{ font-family:inherit; }
 :focus-visible{ outline:2px solid var(--gold-bright); outline-offset:2px; }
 
+/* .app es su PROPIO contenedor de scroll (no la página completa). Esto es
+   deliberado: así su altura real excluye matemáticamente la franja que ocupa
+   el menú inferior fijo, y el navegador nunca puede "creer" que un botón está
+   visible cuando en realidad queda tapado por el menú — porque, para el
+   contenedor que hace scroll, esa franja simplemente no existe. */
 .app{
   position:relative; z-index:1;
   max-width:480px; margin:0 auto;
-  min-height:100vh; min-height:100dvh;
+  /* Altura reducida a propósito: .app termina justo donde empieza el menú
+     fijo (63px de alto + su padding de zona segura). Así ningún elemento
+     dentro de .app puede ocupar físicamente esa franja, sin importar el
+     scroll — no dependemos de que el navegador "decida" hacer scroll solo. */
+  height:calc(100vh - 63px - env(safe-area-inset-bottom));
+  height:calc(100dvh - 63px - env(safe-area-inset-bottom));
   display:flex; flex-direction:column;
-  padding-bottom:calc(76px + env(safe-area-inset-bottom));
+  overflow-y:auto;
+  -webkit-overflow-scrolling:touch;
+  padding-bottom:24px;
 }
 
 /* ---------- Header ---------- */
@@ -323,6 +334,7 @@ select.form-control{ appearance:none; -webkit-appearance:none; background-image:
   width:100%; padding:15px; border-radius:8px; border:none;
   background:var(--gold); color:#221a10; font-weight:700; font-size:15px; cursor:pointer;
   margin-top:6px; letter-spacing:.02em;
+  scroll-margin-bottom:calc(90px + env(safe-area-inset-bottom));
 }
 .btn-primary:active{ background:var(--gold-bright); }
 .btn-secondary{
@@ -804,7 +816,21 @@ input:checked + .slider::before{ transform:translateX(19px); background:var(--go
       <button class="chip" data-filter="cierres"><span class="ic" data-icon="lock" data-icon-size="13" style="display:inline-flex; vertical-align:-2px; margin-right:4px;"></span>Cierres</button>
     </div>
     <div class="form-group" id="historyDateGroup">
-      <input type="date" class="form-control" id="historyDate">
+      <label style="font-size:11.5px; color:var(--muted); text-transform:uppercase; letter-spacing:.06em;">Consultar por rango de fechas</label>
+      <div style="display:flex; gap:8px; align-items:center;">
+        <input type="date" class="form-control" id="historyDateFrom" placeholder="Desde">
+        <span style="color:var(--muted-2); font-size:12px;">a</span>
+        <input type="date" class="form-control" id="historyDateTo" placeholder="Hasta">
+      </div>
+      <button type="button" class="link" id="historyDateClear" style="margin-top:6px; padding:0;">Quitar filtro de fecha</button>
+    </div>
+    <div class="receipt tone-gold" id="historyRangeSummary" style="display:none; margin-bottom:14px;">
+      <div class="stat-label" style="margin-bottom:6px;">Resumen del rango seleccionado</div>
+      <div style="display:flex; justify-content:space-between; font-size:13.5px;">
+        <span style="color:var(--muted);">Ingresos: <b class="num" style="color:var(--green-bright);" id="historyRangeIncome">$0.00</b></span>
+        <span style="color:var(--muted);">Gastos: <b class="num" style="color:var(--red-bright);" id="historyRangeExpense">$0.00</b></span>
+        <span style="color:var(--muted);">Neto: <b class="num" style="color:var(--gold-bright);" id="historyRangeNet">$0.00</b></span>
+      </div>
     </div>
 
     <div class="receipt" id="historyList"></div>
@@ -1259,7 +1285,7 @@ input:checked + .slider::before{ transform:translateX(19px); background:var(--go
       document.getElementById('expenseDate').value = todayLocalInput();
     }
     if(view==='citas'){ renderCitasView(); }
-    window.scrollTo(0,0);
+    document.querySelector('.app').scrollTo(0,0);
   }
   document.querySelectorAll('.nav-btn[data-view]').forEach(b=>{
     b.addEventListener('click', ()=>goTo(b.dataset.view));
@@ -1403,7 +1429,10 @@ input:checked + .slider::before{ transform:translateX(19px); background:var(--go
           <div class="tx-meta">${sub}</div>
         </div>
         <div class="tx-amount ${isIncome?'income':'expense'}">${isIncome?'+':'-'}${money(amount)}</div>
-        <button class="tx-del" data-id="${t.id}" data-type="${t.type}" aria-label="Eliminar">${icon('close',15)}</button>
+        <div class="row-actions" style="flex-shrink:0;">
+          <button class="icon-btn tx-edit" data-id="${t.id}" data-type="${t.type}" aria-label="Editar">${icon('edit',14)}</button>
+          <button class="icon-btn tx-del" data-id="${t.id}" data-type="${t.type}" aria-label="Eliminar">${icon('close',14)}</button>
+        </div>
       </div>`;
     }).join('');
   }
@@ -1424,6 +1453,114 @@ input:checked + .slider::before{ transform:translateX(19px); background:var(--go
             syncAll();
           }
         });
+      });
+    });
+    document.querySelectorAll('#'+containerId+' .tx-edit').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        const id = btn.dataset.id, type = btn.dataset.type;
+        if(type==='income'){
+          const item = income.find(t=>t.id===id);
+          if(item) openEditIncomeModal(item);
+        } else {
+          const item = expenses.find(t=>t.id===id);
+          if(item) openEditExpenseModal(item);
+        }
+      });
+    });
+  }
+
+  /* Editar un ingreso: solo precio, pago, fecha y nota. El servicio/producto
+     vendido NO se puede reasignar aquí a propósito — cambiarlo implicaría
+     recalcular consumo de insumos y stock con alto riesgo de inconsistencias.
+     Si vendieron el artículo equivocado, lo correcto es borrar y registrar de nuevo. */
+  function openEditIncomeModal(item){
+    const isProducto = item.itemType==='producto';
+    openModal({
+      title:'Editar venta',
+      body:`${escapeHtml(item.serviceName)} ${isProducto?'(producto)':'(servicio)'} — el artículo vendido no se puede cambiar aquí; si fue el equivocado, elimina y registra de nuevo.`,
+      formHtml:`
+        <div class="form-group"><label>Precio</label><div class="amount-input-wrap"><span class="currency">$</span>
+          <input type="number" step="0.01" min="0" class="form-control" id="eiAmount" value="${item.price}" placeholder="0.00"></div></div>
+        <div class="form-group"><label>Método de pago</label>
+          <div class="pay-method-group" id="eiPayGroup">
+            <button type="button" data-val="Efectivo" class="${item.payment==='Efectivo'?'active':''}"><span class="ic">${icon('cash',15)}</span> Efectivo</button>
+            <button type="button" data-val="Tarjeta" class="${item.payment==='Tarjeta'?'active':''}"><span class="ic">${icon('card',15)}</span> Tarjeta</button>
+          </div>
+        </div>
+        <div class="form-group"><label>Fecha y hora</label><input type="datetime-local" class="form-control" id="eiDate" value="${toLocalInputValue(item.date)}"></div>
+        <div class="form-group"><label>Nota (opcional)</label><input class="form-control" id="eiNote" value="${escapeHtml(item.note||'')}" placeholder="Ej. Cliente frecuente"></div>`,
+      confirmText:'Guardar cambios',
+      onConfirm:()=>{
+        const amount = parseFloat(document.getElementById('eiAmount').value);
+        const payBtn = document.querySelector('#eiPayGroup button.active');
+        const dateVal = document.getElementById('eiDate').value;
+        if(isNaN(amount) || amount<=0){ toast('Ingresa un precio válido'); return; }
+        if(!dateVal){ toast('Selecciona fecha y hora'); return; }
+        item.price = amount;
+        item.payment = payBtn.dataset.val;
+        item.date = new Date(dateVal).toISOString();
+        item.note = document.getElementById('eiNote').value.trim();
+        save(DB_KEYS.income, income);
+        closeModal(); syncAll(); toast('Venta actualizada ✓');
+      }
+    });
+    document.querySelectorAll('#eiPayGroup button').forEach(b=>{
+      b.addEventListener('click', ()=>{
+        document.querySelectorAll('#eiPayGroup button').forEach(x=>x.classList.remove('active'));
+        b.classList.add('active');
+      });
+    });
+  }
+
+  /* Editar un gasto: todos los campos, incluida la cantidad de insumo comprado
+     si estaba vinculado — reconciliando el stock por la diferencia (no lo
+     duplica ni lo pierde). */
+  function openEditExpenseModal(item){
+    const linkedInsumo = item.insumoId ? insumos.find(i=>i.id===item.insumoId) : null;
+    openModal({
+      title:'Editar gasto',
+      formHtml:`
+        <div class="form-group"><label>Descripción</label><input class="form-control" id="eeDesc" value="${escapeHtml(item.description)}" placeholder="Ej. Compra de shampoo"></div>
+        <div class="form-group"><label>Monto</label><div class="amount-input-wrap"><span class="currency">$</span>
+          <input type="number" step="0.01" min="0" class="form-control" id="eeAmount" value="${item.amount}" placeholder="0.00"></div></div>
+        <div class="form-group"><label>Categoría</label><select class="form-control" id="eeCategory">${categories.map(c=>`<option value="${escapeHtml(c)}" ${c===item.category?'selected':''}>${escapeHtml(c)}</option>`).join('')}</select></div>
+        ${linkedInsumo ? `<div class="form-group"><label>Cantidad comprada de "${escapeHtml(linkedInsumo.name)}"</label><input type="number" step="0.01" min="0.01" class="form-control" id="eeInsumoQty" value="${item.insumoQty}" placeholder="0"></div>` : ''}
+        <div class="form-group"><label>Método de pago</label>
+          <div class="pay-method-group" id="eePayGroup">
+            <button type="button" data-val="Efectivo" class="${item.payment==='Efectivo'?'active':''}"><span class="ic">${icon('cash',15)}</span> Efectivo</button>
+            <button type="button" data-val="Tarjeta" class="${item.payment==='Tarjeta'?'active':''}"><span class="ic">${icon('card',15)}</span> Tarjeta</button>
+          </div>
+        </div>
+        <div class="form-group"><label>Fecha y hora</label><input type="datetime-local" class="form-control" id="eeDate" value="${toLocalInputValue(item.date)}"></div>`,
+      confirmText:'Guardar cambios',
+      onConfirm:()=>{
+        const desc = document.getElementById('eeDesc').value.trim();
+        const amount = parseFloat(document.getElementById('eeAmount').value);
+        const category = document.getElementById('eeCategory').value;
+        const payBtn = document.querySelector('#eePayGroup button.active');
+        const dateVal = document.getElementById('eeDate').value;
+        if(!desc){ toast('Escribe una descripción'); return; }
+        if(isNaN(amount) || amount<=0){ toast('Ingresa un monto válido'); return; }
+        if(!dateVal){ toast('Selecciona fecha y hora'); return; }
+        if(linkedInsumo){
+          const qtyInput = document.getElementById('eeInsumoQty');
+          const newQty = parseFloat(qtyInput.value);
+          if(isNaN(newQty) || newQty<=0){ toast('Ingresa una cantidad válida'); return; }
+          const delta = newQty - Number(item.insumoQty);
+          linkedInsumo.stock = Math.max(0, Number(linkedInsumo.stock) + delta);
+          item.insumoQty = newQty;
+          save(DB_KEYS.insumos, insumos);
+        }
+        item.description = desc; item.amount = amount; item.category = category;
+        item.payment = payBtn.dataset.val; item.date = new Date(dateVal).toISOString();
+        save(DB_KEYS.expenses, expenses);
+        closeModal(); syncAll(); toast('Gasto actualizado ✓');
+      }
+    });
+    document.querySelectorAll('#eePayGroup button').forEach(b=>{
+      b.addEventListener('click', ()=>{
+        document.querySelectorAll('#eePayGroup button').forEach(x=>x.classList.remove('active'));
+        b.classList.add('active');
       });
     });
   }
@@ -1753,26 +1890,47 @@ input:checked + .slider::before{ transform:translateX(19px); background:var(--go
       renderHistory();
     });
   });
-  document.getElementById('historyDate').addEventListener('change', renderHistory);
+  document.getElementById('historyDateFrom').addEventListener('change', renderHistory);
+  document.getElementById('historyDateTo').addEventListener('change', renderHistory);
+  document.getElementById('historyDateClear').addEventListener('click', ()=>{
+    document.getElementById('historyDateFrom').value = '';
+    document.getElementById('historyDateTo').value = '';
+    renderHistory();
+  });
 
   function renderHistory(){
     const dateGroup = document.getElementById('historyDateGroup');
     if(historyFilter==='cierres'){
       dateGroup.style.display = 'none';
+      document.getElementById('historyRangeSummary').style.display = 'none';
       renderCierresList();
       return;
     }
     dateGroup.style.display = '';
-    const dateVal = document.getElementById('historyDate').value;
+    const fromVal = document.getElementById('historyDateFrom').value;
+    const toVal = document.getElementById('historyDateTo').value;
     let all = [...income.map(t=>({...t,type:'income'})), ...expenses.map(t=>({...t,type:'expense'}))];
-    if(historyFilter!=='all'){ all = all.filter(t=>t.type===historyFilter); }
-    if(dateVal){
+
+    if(fromVal || toVal){
       all = all.filter(t=>{
-        const d = new Date(t.date);
-        const local = new Date(d.getTime() - d.getTimezoneOffset()*60000).toISOString().slice(0,10);
-        return local===dateVal;
+        const key = dateKeyLocal(t.date);
+        if(fromVal && key<fromVal) return false;
+        if(toVal && key>toVal) return false;
+        return true;
       });
+      // Resumen del rango: se calcula SIEMPRE sobre Ingresos+Gastos juntos,
+      // sin importar el chip de tipo activo, para dar la foto completa del período.
+      const rangeInc = all.filter(t=>t.type==='income').reduce((a,b)=>a+Number(b.price),0);
+      const rangeExp = all.filter(t=>t.type==='expense').reduce((a,b)=>a+Number(b.amount),0);
+      document.getElementById('historyRangeIncome').textContent = money(rangeInc);
+      document.getElementById('historyRangeExpense').textContent = money(rangeExp);
+      document.getElementById('historyRangeNet').textContent = money(rangeInc-rangeExp);
+      document.getElementById('historyRangeSummary').style.display = '';
+    } else {
+      document.getElementById('historyRangeSummary').style.display = 'none';
     }
+
+    if(historyFilter!=='all'){ all = all.filter(t=>t.type===historyFilter); }
     all.sort((a,b)=> new Date(b.date)-new Date(a.date));
     document.getElementById('historyList').innerHTML = renderTxRows(all);
     bindDeleteButtons('historyList');
@@ -2058,6 +2216,19 @@ input:checked + .slider::before{ transform:translateX(19px); background:var(--go
     const svcOptions = `<option value="">Sin servicio específico</option>` + services.map(s=>`<option value="${s.id}" ${s.id===c.serviceId?'selected':''}>${escapeHtml(s.name)}</option>`).join('');
     const dateVal = c.date ? toLocalInputValue(c.date) : todayLocalInput();
     const clientesOptions = clientes.map(cl=>`<option value="${escapeHtml(cl.name)}">`).join('');
+    // "Completada" nunca es una opción elegible a mano: solo se alcanza cobrando
+    // de verdad desde el botón dedicado. Así "Completada" siempre significa
+    // "hay una venta registrada", sin excepción y sin poder duplicarla.
+    const statusField = (c.status==='completada')
+      ? `<div class="form-group"><label>Estado</label>
+          <div class="form-control" style="background:var(--surface-3); color:var(--muted);">✓ Completada — con venta ya registrada</div>
+          <input type="hidden" id="fcStatus" value="completada">
+        </div>`
+      : `<div class="form-group"><label>Estado</label><select class="form-control" id="fcStatus">
+          <option value="pendiente" ${c.status==='pendiente'?'selected':''}>Pendiente</option>
+          <option value="confirmada" ${c.status==='confirmada'?'selected':''}>Confirmada</option>
+          <option value="cancelada" ${c.status==='cancelada'?'selected':''}>Cancelada</option>
+        </select></div>`;
     return `<div class="form-group"><label>Nombre del cliente</label>
         <input class="form-control" id="fcName" list="clientesDatalist" value="${escapeHtml(c.clientName)}" placeholder="Escribe o elige un cliente existente" autocomplete="off">
         <datalist id="clientesDatalist">${clientesOptions}</datalist>
@@ -2065,12 +2236,7 @@ input:checked + .slider::before{ transform:translateX(19px); background:var(--go
       <div class="form-group"><label>Teléfono</label><input type="tel" class="form-control" id="fcPhone" value="${escapeHtml(c.clientPhone||'')}" placeholder="(000) 000-0000" maxlength="14"></div>
       <div class="form-group"><label>Servicio</label><select class="form-control" id="fcService">${svcOptions}</select></div>
       <div class="form-group"><label>Fecha y hora</label><input type="datetime-local" class="form-control" id="fcDate" value="${dateVal}"></div>
-      <div class="form-group"><label>Estado</label><select class="form-control" id="fcStatus">
-        <option value="pendiente" ${c.status==='pendiente'?'selected':''}>Pendiente</option>
-        <option value="confirmada" ${c.status==='confirmada'?'selected':''}>Confirmada</option>
-        <option value="completada" ${c.status==='completada'?'selected':''}>Completada</option>
-        <option value="cancelada" ${c.status==='cancelada'?'selected':''}>Cancelada</option>
-      </select></div>
+      ${statusField}
       <div class="form-group"><label>Notas (opcional)</label><input class="form-control" id="fcNotes" value="${escapeHtml(c.notes||'')}" placeholder="Ej. Prefiere corte con máquina 2"></div>`;
   }
   /* Crea o actualiza el cliente en segundo plano al guardar una cita — el
