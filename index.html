@@ -609,7 +609,7 @@ input:checked + .slider::before{ transform:translateX(19px); background:var(--go
     <button type="button" id="lockCancelBtn" class="btn-secondary" style="display:none;">Cancelar</button>
   </form>
   <p class="lock-hint" id="lockHint"></p>
-  <p style="font-size:10.5px; color:var(--muted-2); margin-top:20px;">Build 2026.08.26-8</p>
+  <p style="font-size:10.5px; color:var(--muted-2); margin-top:20px;">Build 2026.08.26-10</p>
 </div>
 
 <div class="app">
@@ -989,7 +989,7 @@ input:checked + .slider::before{ transform:translateX(19px); background:var(--go
   <section id="view-ajustes" class="view">
     <div class="receipt tone-gold" style="text-align:center; padding:12px; margin-bottom:16px;">
       <span style="font-size:11px; color:var(--muted);">Versión instalada:</span>
-      <span class="num" style="font-size:14px; font-weight:700; color:var(--gold-bright); display:block;">Build 2026.08.26-8</span>
+      <span class="num" style="font-size:14px; font-weight:700; color:var(--gold-bright); display:block;">Build 2026.08.26-10</span>
     </div>
     <div class="section-title"><h2>Apariencia</h2></div>
     <div class="receipt">
@@ -1128,7 +1128,7 @@ input:checked + .slider::before{ transform:translateX(19px); background:var(--go
     </div>
 
     <p style="font-size:11.5px; color:var(--muted-2); text-align:center; margin-top:18px; line-height:1.6;">
-      Aure Barbershop · Build <b id="buildVersionFooter" style="color:var(--gold-bright);">2026.08.26-8</b><br>
+      Aure Barbershop · Build <b id="buildVersionFooter" style="color:var(--gold-bright);">2026.08.26-10</b><br>
       Tus datos se guardan solo en este teléfono.<br>Exporta un respaldo con frecuencia.
     </p>
   </section>
@@ -2384,7 +2384,7 @@ input:checked + .slider::before{ transform:translateX(19px); background:var(--go
       ? `<option value="">— Agrega un servicio en Catálogo primero —</option>`
       : (c.serviceId ? '' : `<option value="" disabled selected>Elige un servicio…</option>`) +
         services.map(s=>`<option value="${s.id}" ${s.id===c.serviceId?'selected':''}>${escapeHtml(s.name)} · ${money(s.price)}${s.duration ? ` · ${s.duration} min` : ''}</option>`).join('');
-    const dateVal = c.date ? toLocalInputValue(c.date) : todayLocalInput();
+    const dateVal = c.date ? toLocalInputValue(c.date) : toLocalInputValue(findNextAvailableStart(new Date()));
     const clientesOptions = clientes.map(cl=>`<option value="${escapeHtml(cl.name)}">`).join('');
     // "Completada" nunca es una opción elegible a mano: solo se alcanza cobrando
     // de verdad desde el botón dedicado. Así "Completada" siempre significa
@@ -2445,6 +2445,32 @@ input:checked + .slider::before{ transform:translateX(19px); background:var(--go
     });
   }
   function fmtHora(ms){ return new Date(ms).toLocaleTimeString('es', {hour:'2-digit', minute:'2-digit'}); }
+
+  /* Busca el próximo momento libre a partir de una fecha dada, saltando por
+     completo cualquier cita activa que ya esté ocupando ese horario. Se usa
+     para sugerir la hora por defecto al agendar una cita nueva — no tendría
+     sentido tener el bloqueo de solapamiento y a la vez sugerir de entrada
+     una hora que sabemos que va a chocar. */
+  function findNextAvailableStart(fromDate){
+    let candidate = new Date(fromDate).getTime();
+    // Redondea "ahora" al múltiplo de 5 minutos siguiente, para sugerir una
+    // hora más natural (ej. 11:35 en vez de 11:32:47).
+    candidate = Math.ceil(candidate/300000)*300000;
+    let changed = true, guard = 0;
+    while(changed && guard<100){
+      changed = false;
+      for(const c of citas){
+        if(c.status==='cancelada' || c.status==='completada') continue;
+        const iv = citaInterval(c);
+        if(candidate >= iv.start && candidate < iv.end){
+          candidate = iv.end;
+          changed = true;
+        }
+      }
+      guard++;
+    }
+    return new Date(candidate);
+  }
 
   function openCitaModal(existing){
     if(services.length===0){
@@ -2625,8 +2651,9 @@ input:checked + .slider::before{ transform:translateX(19px); background:var(--go
 
     const svc = c.serviceId ? services.find(s=>s.id===c.serviceId) : null;
 
-    if(!svc){
-      // Sin servicio vinculado: solo se marca como completada, no hay nada que vender.
+    if(!c.serviceId){
+      // Nunca tuvo un servicio vinculado (solo puede pasar en citas antiguas,
+      // creadas antes de que el servicio fuera obligatorio).
       openModal({
         title:'Marcar cita como completada', body:'Esta cita no tiene un servicio vinculado, así que no se registrará ninguna venta.',
         confirmText:'Completar',
@@ -2635,6 +2662,48 @@ input:checked + .slider::before{ transform:translateX(19px); background:var(--go
           save(DB_KEYS.citas, citas);
           closeModal(); syncAll(); toast('Cita completada ✓');
         }
+      });
+      return;
+    }
+
+    if(!svc){
+      // Tenía un servicio vinculado, pero fue eliminado del catálogo después.
+      // Se deja cobrar igual (con el nombre histórico guardado en la cita),
+      // solo que sin receta de insumos ni precio sugerido, porque esos datos
+      // ya no existen en ningún lado.
+      openModal({
+        title:'Completar cita y registrar venta',
+        body:`${escapeHtml(c.clientName)} · ${escapeHtml(c.serviceName||'Servicio eliminado')} — este servicio ya no existe en tu catálogo, pero puedes cobrar la cita de todas formas.`,
+        formHtml:`
+          <div class="form-group"><label>Precio cobrado</label><div class="amount-input-wrap"><span class="currency">$</span>
+            <input type="number" step="0.01" min="0" class="form-control" id="ccAmount" placeholder="0.00"></div></div>
+          <div class="form-group"><label>Método de pago</label>
+            <div class="pay-method-group" id="ccPayGroup">
+              <button type="button" data-val="Efectivo" class="active"><span class="ic">${icon('cash',15)}</span> Efectivo</button>
+              <button type="button" data-val="Tarjeta"><span class="ic">${icon('card',15)}</span> Tarjeta</button>
+            </div>
+          </div>`,
+        confirmText:'Completar y cobrar',
+        onConfirm:()=>{
+          const amount = parseFloat(document.getElementById('ccAmount').value);
+          const payBtn = document.querySelector('#ccPayGroup button.active');
+          if(isNaN(amount) || amount<=0){ toast('Ingresa un precio válido'); return; }
+          c.status = 'completada';
+          save(DB_KEYS.citas, citas);
+          income.push({
+            id: uid(), itemType:'servicio', serviceId:null, serviceName: c.serviceName||'Servicio eliminado', price: amount,
+            cost:0, payment: payBtn.dataset.val, date: new Date().toISOString(), note:`Cita: ${c.clientName}`, citaId: c.id
+          });
+          save(DB_KEYS.income, income);
+          closeModal(); syncAll();
+          toast('Cita completada y venta registrada ✓');
+        }
+      });
+      document.querySelectorAll('#ccPayGroup button').forEach(b=>{
+        b.addEventListener('click', ()=>{
+          document.querySelectorAll('#ccPayGroup button').forEach(x=>x.classList.remove('active'));
+          b.classList.add('active');
+        });
       });
       return;
     }
@@ -2785,7 +2854,15 @@ input:checked + .slider::before{ transform:translateX(19px); background:var(--go
         if(isDuplicateName(services, finalName, isEdit?existingService.id:undefined)){ toast('Ya existe un servicio con ese nombre'); return; }
         const cleanRecipe = recipe.filter(r=>r.insumoId && r.qty>0);
         if(isEdit){
+          const nameChanged = existingService.name !== finalName;
           existingService.name = finalName; existingService.price = finalPrice; existingService.recipe = cleanRecipe; existingService.duration = finalDuration;
+          // Propaga el nombre nuevo a las citas que ya tenían este servicio
+          // vinculado (la agenda es un dato "vivo", a diferencia de las ventas
+          // ya cobradas en Historial, que conservan su nombre histórico).
+          if(nameChanged){
+            citas.forEach(c=>{ if(c.serviceId===existingService.id) c.serviceName = finalName; });
+            save(DB_KEYS.citas, citas);
+          }
         } else {
           services.push({id:uid(), name:finalName, price:finalPrice, recipe:cleanRecipe, duration:finalDuration});
         }
@@ -2800,8 +2877,13 @@ input:checked + .slider::before{ transform:translateX(19px); background:var(--go
   document.getElementById('addServiceBtn').addEventListener('click', ()=>openServiceModal(null));
 
   function deleteService(id){
+    const svc = services.find(s=>s.id===id);
+    const activeCitas = citas.filter(c=>c.serviceId===id && c.status!=='completada' && c.status!=='cancelada');
+    const body = activeCitas.length>0
+      ? `Hay ${activeCitas.length} cita(s) pendiente(s) usando este servicio. Podrás seguir cobrándolas manualmente, pero ya no aparecerán en el catálogo para nuevas citas o ventas. Los ingresos ya registrados no se ven afectados.`
+      : 'Los ingresos ya registrados con este servicio no se verán afectados; solo desaparecerá del catálogo.';
     openModal({
-      title:'Eliminar servicio', body:'Los ingresos ya registrados con este servicio no se verán afectados; solo desaparecerá del catálogo.',
+      title:'Eliminar servicio', body,
       confirmText:'Eliminar', danger:true,
       onConfirm:()=>{
         services = services.filter(s=>s.id!==id);
